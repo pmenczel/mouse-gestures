@@ -51,7 +51,7 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Action.cs" />
+    <Compile Include="WMGAction.cs" />
     <Compile Include="Gesture.cs" />
     <Compile Include="GestureAnalyzer.cs" />
     <Compile Include="IGestureAnalyzer.cs" />

@@ -30,9 +30,7 @@ namespace WMG.Gestures
      * - at the beginning of a gesture
      * - while the gesture is being performed
      * - at the completion of a gesture.
-     * All events are launched in new threads, since this might be called from the message queue (and event subscribers might simulate events).
-     *      TODO: would it be better to use BeginInvoke for that instead of raw threads? but it is confusing...
-     *      https://docs.microsoft.com/en-us/dotnet/standard/asynchronous-programming-patterns/calling-synchronous-methods-asynchronously
+     * All events are launched asynchronously, since this might be called from the message queue (and event subscribers might simulate events).
      * 
      * "Click-through" events are treated specially: events where the right mouse button was pressed and released without any mouse movement (or any other events) in between.
      * (However, if the left mouse button is pressed as well, this is a rocker gesture and not a click-through.)
@@ -57,15 +55,53 @@ namespace WMG.Gestures
         public event GestureHandler OnGestureComplete;
         public event ClickThroughHandler OnClickThrough;
 
+        private void RaiseGestureStart(UnfinishedGesture arg)
+        {
+            if (OnGestureStart == null) return;
+            foreach (UnfinishedGestureHandler x in OnGestureStart.GetInvocationList())
+            {
+                // this way we ignore exceptions thrown by the clients (i.e., they end up in the uncaught-exception-handler)
+                x.BeginInvoke(arg, x.EndInvoke, null);
+            }
+        }
+
+        // the following three methods are basically copies of RaiseGestureStart, but not sure if it is possible to abstract away
+        private void RaiseGestureUpdate(UnfinishedGesture arg)
+        {
+            if (OnGestureUpdate == null) return;
+            foreach (UnfinishedGestureHandler x in OnGestureUpdate.GetInvocationList())
+            {
+                x.BeginInvoke(arg, x.EndInvoke, null);
+            }
+        }
+
+        private void RaiseGestureComplete(Gesture arg)
+        {
+            if (OnGestureComplete == null) return;
+            foreach (GestureHandler x in OnGestureComplete.GetInvocationList())
+            {
+                x.BeginInvoke(arg, x.EndInvoke, null);
+            }
+        }
+        
+        private void RaiseClickThrough(POINT arg)
+        {
+            if (OnClickThrough == null) return;
+            foreach (ClickThroughHandler x in OnClickThrough.GetInvocationList())
+            {
+                x.BeginInvoke(arg, x.EndInvoke, null);
+            }
+        }
+
         /*
          * Notify the analyzer that the right mouse button was pressed.
          * Returns: true, since we must assume at this point that the event is the beginning of a gesture.
          */
-        public bool RmbDown(Point position, Modifiers modifiers)
+        public bool RmbDown(POINT position, Modifiers modifiers)
         {
             // start new gesture
             CurrentGesture = new UnfinishedGesture(modifiers, position);
-            new Thread(() => OnGestureStart?.Invoke(CurrentGesture)).Start();
+            RaiseGestureStart(CurrentGesture);
             return true;
         }
 
@@ -74,7 +110,7 @@ namespace WMG.Gestures
          * Returns: whether this event is part of a gesture.
          * Note that this will still return true in the case of a click-through, for consistency with the previous RmbDown event.
          */
-        public bool RmbUp(Point position, System.Action<UnfinishedGesture> cleanup)
+        public bool RmbUp(POINT position, Action<Gesture> cleanup)
         {
             if (CurrentGesture == null)
                 return false;
@@ -82,13 +118,12 @@ namespace WMG.Gestures
             // detect click through
             if (!CurrentGesture.CompletedActions.Any() && CurrentGesture.MovementData.Count() == 1 && !CurrentGesture.InitialModifiers.Lmb)
             {
-                new Thread(() => OnClickThrough?.Invoke(position)).Start();
+                RaiseClickThrough(position);
             }
             else
             {
-                var unfinishedGesture = CurrentGesture;
-                var gesture = unfinishedGesture.Complete();
-                new Thread(() => { cleanup?.Invoke(unfinishedGesture); OnGestureComplete?.Invoke(gesture); }).Start();
+                var gesture = CurrentGesture.Complete();
+                new Thread(() => { cleanup?.Invoke(gesture); RaiseGestureComplete(gesture); }).Start();
             }
             CurrentGesture = null;
             return true;
@@ -99,7 +134,7 @@ namespace WMG.Gestures
             if (CurrentGesture != null)
             {
                 CurrentGesture = null;
-                new Thread(() => OnGestureUpdate?.Invoke(null)).Start();
+                RaiseGestureUpdate(null);
             }
         }
 
@@ -107,7 +142,7 @@ namespace WMG.Gestures
          * Notify the analyzer that the mouse was moved.
          * Returns: whether this event is part of a gesture.
          */
-        public bool MouseMovement(Point newPosition)
+        public bool MouseMovement(POINT newPosition)
         {
             if (CurrentGesture == null)
                 return false;
@@ -161,7 +196,7 @@ namespace WMG.Gestures
                 }
             }
 
-            new Thread(() => OnGestureUpdate?.Invoke(CurrentGesture)).Start();
+            RaiseGestureUpdate(CurrentGesture);
             return true;
         }
 
@@ -179,7 +214,7 @@ namespace WMG.Gestures
             var newAction = new ModifierChangeAction(newModifiers);
             CurrentGesture.RecordAction(newAction);
             CurrentGesture.ClearMovementData();
-            new Thread(() => OnGestureUpdate?.Invoke(CurrentGesture)).Start();
+            RaiseGestureUpdate(CurrentGesture);
             return true;
         }
 
@@ -219,7 +254,7 @@ namespace WMG.Gestures
             var newAction = new MouseWheelAction(direction);
             CurrentGesture.RecordAction(newAction);
             CurrentGesture.ClearMovementData();
-            OnGestureUpdate?.Invoke(CurrentGesture);
+            RaiseGestureUpdate(CurrentGesture);
             return true;
         }
 
@@ -227,7 +262,7 @@ namespace WMG.Gestures
          * Returns the direction from p1 to p2.
          * If the squared distance between the points is smaller than Settings.WiggleRoom, returns null.
          */
-        private Direction? DetermineDirection(Point p1, Point p2)
+        private Direction? DetermineDirection(POINT p1, POINT p2)
         {
             if (p1.SquareDistance(p2) < WiggleRoomSq)
             {

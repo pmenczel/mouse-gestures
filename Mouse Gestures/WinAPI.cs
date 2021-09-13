@@ -58,7 +58,7 @@ namespace WMG.Core
         [StructLayout(LayoutKind.Sequential)]
         internal struct MsLLHookStruct
         {
-            internal Point pt;
+            internal POINT pt;
             internal int mouseData;
             internal int flags;
             internal int time;
@@ -181,7 +181,7 @@ namespace WMG.Core
          * https://docs.microsoft.com/en-us/windows/desktop/api/winuser/nf-winuser-windowfrompoint
          */
         [DllImport("user32.dll")]
-        internal static extern IntPtr WindowFromPoint(Point p);
+        internal static extern IntPtr WindowFromPoint(POINT p);
 
         /*
          * Used by *GetAncestor*.
@@ -205,7 +205,7 @@ namespace WMG.Core
          * Helper method for a commonly used requirement.
          * This is - as far as I can tell - the top level window at the given point.
          */
-        internal static IntPtr RootWindowFromPoint(Point p)
+        internal static IntPtr RootWindowFromPoint(POINT p)
         {
             IntPtr window = WindowFromPoint(p);
             if (window == IntPtr.Zero)
@@ -256,6 +256,14 @@ namespace WMG.Core
         internal static extern short GetKeyState(System.Windows.Forms.Keys nVirtKey);
 
         /*
+         * https://www.pinvoke.net/default.aspx/user32.getcursorpos
+         * https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getcursorpos
+         */
+        [DllImport("user32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        internal static extern bool GetCursorPos(out POINT lpPoint);
+
+        /*
          * http://www.pinvoke.net/default.aspx/kernel32/GetModuleHandle.html
          * https://docs.microsoft.com/en-us/windows/desktop/api/libloaderapi/nf-libloaderapi-getmodulehandlea
          */
@@ -271,12 +279,12 @@ namespace WMG.Core
      * https://docs.microsoft.com/en-us/windows/desktop/api/windef/ns-windef-point
      */
     [StructLayout(LayoutKind.Sequential)]
-    public readonly struct Point
+    public readonly struct POINT
     {
         public readonly int x;
         public readonly int y;
 
-        public double SquareDistance(Point other) =>
+        public double SquareDistance(POINT other) =>
             (x - other.x) * (x - other.x) + (y - other.y) * (y - other.y);
 
         public override string ToString() => $"({x}, {y})";

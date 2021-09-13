@@ -7,7 +7,7 @@ namespace WMG
 {
     public class TestGestures : ApplicationContext
     {
-        private static readonly Gesture CLOSE_GESTURE = new Gesture(Modifiers.NONE, new WMG.Gestures.Action[] { new MouseMovementAction(Direction.DOWN), new MouseMovementAction(Direction.RIGHT) });
+        private static readonly Gesture CLOSE_GESTURE = new Gesture(Modifiers.NONE, new WMG.Gestures.WMGAction[] { new MouseMovementAction(Direction.DOWN), new MouseMovementAction(Direction.RIGHT) });
 
         public static void Main(string[] args)
         {

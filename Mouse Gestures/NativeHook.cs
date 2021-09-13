@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using WMG.Gestures;
@@ -112,7 +113,7 @@ namespace WMG.Core
             if (nCode < 0 || forceDisabled)
                 return WinAPI.CallNextHookEx(mouseHook, nCode, wParam, lParam);
             MsLLHookStruct mouseInfo = Marshal.PtrToStructure<MsLLHookStruct>(lParam);
-            Point currentMouseLocation = mouseInfo.pt;
+            POINT currentMouseLocation = mouseInfo.pt;
 
             // whether the event should be consumed (i.e., whether CallNextHookEx should be called at the end of the method)
             bool consume = false;
@@ -212,7 +213,7 @@ namespace WMG.Core
          * Determines whether a gesture can be started right now by a right mouse click at the specified location.
          * TODO: the idea is that we should not register mouse gestures in applications such as Opera, which use mouse gestures themselves
          */
-        private bool CanStartGestureAt(Point mouseLocation)
+        private bool CanStartGestureAt(POINT mouseLocation)
         {
             return true;
         }
@@ -265,11 +266,13 @@ namespace WMG.Core
          * Since the release event was consumed, the key would still appear pressed to other programs and the operating system.
          * We must therefore simulate release events for all modifiers that were initially pressed and are not pressed any more.
          */
-        private void CleanupModifiers(UnfinishedGesture gesture)
+        private void CleanupModifiers(Gesture gesture)
         {
             var initialModifiers = gesture.InitialModifiers;
-            var currentModifiers = gesture.CurrentModifiers();
-            if (initialModifiers.Equals(currentModifiers)) return;
+            var lastModifierChange = gesture.Actions.Where(a => a is ModifierChangeAction).LastOrDefault();
+            if (lastModifierChange == null)
+                return;
+            var currentModifiers = (lastModifierChange as ModifierChangeAction).newModifiers;
 
             forceDisabled = true;
 
@@ -299,8 +302,8 @@ namespace WMG.Core
             }
             if (initialModifiers.Lmb && !currentModifiers.Lmb)
             {
-                var currentMousePosition = gesture.CurrentMousePosition();
-                WinAPI.mouse_event(MouseEventFlags.ABSOLUTE | MouseEventFlags.LEFTUP, currentMousePosition.x, currentMousePosition.y, 0, UIntPtr.Zero);
+                bool succ = WinAPI.GetCursorPos(out POINT currentMousePos); // it's probably not too important where we release the mouse, but let's try to use the current mouse position
+                WinAPI.mouse_event(MouseEventFlags.ABSOLUTE | MouseEventFlags.LEFTUP, succ ? currentMousePos.x : 0, succ ? currentMousePos.y : 0, 0, UIntPtr.Zero);
             }
 
             forceDisabled = false;
@@ -309,7 +312,7 @@ namespace WMG.Core
         /*
          * This will be called after a click-through event. Here, we must simulate the right mouse button click that we already, "accidentally", consumed.
          */
-        private void ClickThrough(Point position)
+        private void ClickThrough(POINT position)
         {
             forceDisabled = true;
             WinAPI.mouse_event(MouseEventFlags.ABSOLUTE | MouseEventFlags.RIGHTDOWN, position.x, position.y, 0, UIntPtr.Zero);

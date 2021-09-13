@@ -19,9 +19,9 @@ namespace WMG.Gestures
     public class Gesture : System.IEquatable<Gesture>
     {
         public Modifiers InitialModifiers { get; }
-        public IEnumerable<Action> Actions { get; }
+        public IEnumerable<WMGAction> Actions { get; }
 
-        public Gesture(Modifiers initialModifiers, IEnumerable<Action> actions)
+        public Gesture(Modifiers initialModifiers, IEnumerable<WMGAction> actions)
         {
             if (initialModifiers == null || actions == null)
                 throw new ArgumentNullException();
@@ -40,11 +40,11 @@ namespace WMG.Gestures
             var strings = str.Split(';');
 
             var initialModifiers = Modifiers.FromString(strings[0]);
-            var actions = new Action[strings.Length - 1];
+            var actions = new WMGAction[strings.Length - 1];
 
             for (int i = 1; i < strings.Length; i++)
             {
-                actions[i - 1] = Action.FromString(strings[i]);
+                actions[i - 1] = WMGAction.FromString(strings[i]);
             }
             return new Gesture(initialModifiers, actions);
         }
@@ -52,7 +52,7 @@ namespace WMG.Gestures
         public string PrettyPrint()
         {
             string result = $"[BEGIN {InitialModifiers}]";
-            foreach (Action action in Actions)
+            foreach (WMGAction action in Actions)
             {
                 result += $" {action.PrettyPrint()}";
             }
@@ -73,9 +73,9 @@ namespace WMG.Gestures
         {
             int hashCode = 1316417471;
             hashCode = hashCode * -1521134295 + InitialModifiers.GetHashCode();
-            foreach (Action a in Actions)
+            foreach (WMGAction a in Actions)
             {
-                hashCode = hashCode * -1521134295 + EqualityComparer<Action>.Default.GetHashCode(a);
+                hashCode = hashCode * -1521134295 + EqualityComparer<WMGAction>.Default.GetHashCode(a);
             }
             return hashCode;
         }

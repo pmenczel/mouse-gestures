@@ -6,17 +6,17 @@ namespace WMG.Gestures
     /* There are three types of Action: mouse movements, mouse wheel movements and changes of modifier keys.
      * The former two are specified by a direction (up, down, left or right), the latter is specified by the new set of pressed modifier keys (shift, control, alt, left mouse button).
      */
-    public abstract class Action
+    public abstract class WMGAction // named "WMGAction" instead of just "Action" because of System.Action
     {
         /* Do not allow for additional child classes. */
-        internal Action() { }
+        internal WMGAction() { }
 
         /* Child classes must implement ToString. */
         public abstract override string ToString();
 
         public string PrettyPrint() => $"[{ToString()}]";
 
-        public static Action FromString(string str)
+        public static WMGAction FromString(string str)
         {
             switch (str)
             {
@@ -35,7 +35,7 @@ namespace WMG.Gestures
         }
     }
 
-    public sealed class MouseMovementAction : Action, IEquatable<MouseMovementAction>
+    public sealed class MouseMovementAction : WMGAction, IEquatable<MouseMovementAction>
     {
         public readonly Direction direction;
 
@@ -68,7 +68,7 @@ namespace WMG.Gestures
         public override int GetHashCode() => -1006820870 + direction.GetHashCode();
     }
 
-    public sealed class MouseWheelAction : Action, IEquatable<MouseWheelAction>
+    public sealed class MouseWheelAction : WMGAction, IEquatable<MouseWheelAction>
     {
         public readonly Direction direction;
 
@@ -101,7 +101,7 @@ namespace WMG.Gestures
         public override int GetHashCode() => -1006820870 + direction.GetHashCode();
     }
 
-    public sealed class ModifierChangeAction : Action, IEquatable<ModifierChangeAction>
+    public sealed class ModifierChangeAction : WMGAction, IEquatable<ModifierChangeAction>
     {
         public readonly Modifiers newModifiers;
 
