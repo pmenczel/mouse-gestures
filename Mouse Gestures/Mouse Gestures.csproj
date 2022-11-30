@@ -56,7 +56,7 @@
     <Compile Include="GestureAnalyzer.cs" />
     <Compile Include="IGestureAnalyzer.cs" />
     <Compile Include="Modifiers.cs" />
-    <Compile Include="NativeHook.cs" />
+    <Compile Include="NativeInterface.cs" />
     <Compile Include="Settings.cs" />
     <Compile Include="TestGestures.cs" />
     <Compile Include="UnfinishedGesture.cs" />

@@ -15,7 +15,7 @@ namespace WMG.Core
      * 1) If the right mouse button is clicked without any gesturing (click-through), the mouse click must be emulated afterwards.
      * 2) When the gesture is finished, we must emulate the pressing / releasing of modifier keys so that the operating system doesn't get confused about their state.
      */
-    public class NativeHook : IDisposable
+    public class NativeInterface : IDisposable
     {
         // values of IntPtr.Zero indicate that there is no hook installed currently
         private IntPtr mouseHook = IntPtr.Zero;
@@ -25,7 +25,7 @@ namespace WMG.Core
 
         private bool forceDisabled = false; // can be set to true temporarily for simulating events without notifying the analyzer
 
-        public NativeHook(IGestureAnalyzer analyzer)
+        public NativeInterface(IGestureAnalyzer analyzer)
         {
             this.analyzer = analyzer;
             analyzer.OnClickThrough += ClickThrough;
@@ -334,7 +334,7 @@ namespace WMG.Core
             GC.SuppressFinalize(this);
         }
 
-        ~NativeHook()
+        ~NativeInterface()
         {
             Dispose();
         }

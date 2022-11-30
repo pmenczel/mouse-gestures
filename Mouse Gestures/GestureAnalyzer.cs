@@ -6,10 +6,12 @@ using WMG.Core;
 namespace WMG.Gestures
 {
     /*
-     * Analyzes detected mouse / keyboard events, converting them into mouse gestures.
-     * While the gesture is being performed, we keep track of its progress as an unfinished gesture.
+     * A GestureAnalyzer interprets raw mouse / keyboard events, converting them into mouse gestures.
+     * The GestureAnalyzer is notified about the raw events via the methods offered in the IGestureAnalyzer interface,
+     *      which return a bool indicating whether the GestureAnalyzer considers them part of a mouse gesture.
+     * While a gesture is being performed, we keep track of its progress as an UnfinishedGesture event.
      * 
-     * The parameter "wiggle room" plays an important role in the analysis:
+     * The parameter "wiggle room" plays a key role in the analysis:
      * 1. Mouse movements smaller than the wiggle room do not create a mouse movement action.
      * 2. If there is an ongoing mouse movement action in one direction, a movement into another direction of less than the wiggle room will be ignored.
      * 
@@ -20,15 +22,15 @@ namespace WMG.Gestures
      * When mouse movement is detected:
      *      Case 1: The latest completed action A is not a MouseMovementAction:
      *          If the mouse has moved more than the wiggle room from the position of A, this adds a new MouseMovementAction
-     *      Otherwise (i.e., the tricky bit):
+     *      Case 2: Otherwise (this is the tricky bit):
      *          1. We go back in the recorded movement until we are at least (wiggle room) from the current mouse position, call that point P
      *          2. We determine the direction from P to the current mouse position
-     *          3. If it differs from the direction of the latest MouseMovementAction, this is a direction change. We adds a new MouseMovementAction, where the anchor point is the old point
+     *          3. If it differs from the direction of the latest MouseMovementAction, this is a direction change. We adds a new MouseMovementAction, where the anchor point is P
      *          4. It the direction is still the same, we do nothing except adding the new point to the raw data.
      * 
-     * Events are being created
+     * The GestureAnalyzer fires events
      * - at the beginning of a gesture
-     * - while the gesture is being performed
+     * - for every processed raw input while a gesture is being recorded
      * - at the completion of a gesture.
      * All events are launched asynchronously, since this might be called from the message queue (and event subscribers might simulate events).
      * 
@@ -60,7 +62,7 @@ namespace WMG.Gestures
             if (OnGestureStart == null) return;
             foreach (UnfinishedGestureHandler x in OnGestureStart.GetInvocationList())
             {
-                // this way we ignore exceptions thrown by the clients (i.e., they end up in the uncaught-exception-handler)
+                // we ignore exceptions thrown by the clients (i.e., they end up in the uncaught-exception-handler)
                 x.BeginInvoke(arg, x.EndInvoke, null);
             }
         }
@@ -107,8 +109,12 @@ namespace WMG.Gestures
 
         /*
          * Notify the analyzer that the right mouse button was released.
+         * 
+         * In case this represents the end of a mouse gesture, the cleanup action will be invoked.
+         * It is guaranteed to be invoked before the gesture complete event fires, and in a separate Thread.
+         * 
          * Returns: whether this event is part of a gesture.
-         * Note that this will still return true in the case of a click-through, for consistency with the previous RmbDown event.
+         * Note that this will return true in the case of a click-through, for consistency with the previous RmbDown event.
          */
         public bool RmbUp(POINT position, Action<Gesture> cleanup)
         {
@@ -260,7 +266,7 @@ namespace WMG.Gestures
 
         /*
          * Returns the direction from p1 to p2.
-         * If the squared distance between the points is smaller than Settings.WiggleRoom, returns null.
+         * Returns null if the squared distance between the points is smaller than Settings.WiggleRoom.
          */
         private Direction? DetermineDirection(POINT p1, POINT p2)
         {

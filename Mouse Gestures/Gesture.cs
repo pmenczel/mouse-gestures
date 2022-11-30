@@ -12,9 +12,9 @@ namespace WMG.Gestures
      * Note that a change in modifier keys is recorded separately from mouse movements. Pressing, for example, shift while moving the mouse to the right thus corresponds to a gesture with three events: mouse right, shift, mouse right.
      * 
      * A gesture is always initiated by pressing the right mouse button and ended by releasing the right mouse button.
-     * We must store the modifier keys that are already pressed at the time, and the list of actions following afterwards.
+     * We must store the modifier keys that are already pressed at the initial time, and the list of actions following afterwards.
      * 
-     * Possible future improvements: allow other modifier keys, allow using different input in place of "right mouse button"
+     * Possible future improvements: allow other modifier keys, allow gestures starting with something other than "right mouse button"
      */
     public class Gesture : System.IEquatable<Gesture>
     {

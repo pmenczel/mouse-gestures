@@ -18,7 +18,7 @@ namespace WMG
             analyzer.OnGestureComplete += (gesture => Console.WriteLine($"Mouse gesture detected: {gesture.PrettyPrint()}\n"));
             analyzer.OnClickThrough += (_ => Console.WriteLine("Click-Through\n"));
 
-            var hook = new NativeHook(analyzer);
+            var hook = new NativeInterface(analyzer);
             TestGestures app = new TestGestures();
 
             analyzer.OnGestureComplete += gesture =>
