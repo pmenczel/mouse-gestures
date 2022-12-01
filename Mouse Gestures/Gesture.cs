@@ -20,14 +20,19 @@ namespace WMG.Gestures
     {
         public Modifiers InitialModifiers { get; }
         public IEnumerable<WMGAction> Actions { get; }
+        public UnfinishedGesture RawData { get; }
 
-        public Gesture(Modifiers initialModifiers, IEnumerable<WMGAction> actions)
+        public Gesture(Modifiers initialModifiers, IEnumerable<WMGAction> actions, UnfinishedGesture rawData)
         {
             if (initialModifiers == null || actions == null)
                 throw new ArgumentNullException();
+            
             InitialModifiers = initialModifiers;
             Actions = actions;
+            RawData = rawData;
         }
+
+        public Gesture(Modifiers initialModifiers, IEnumerable<WMGAction> actions) : this(initialModifiers, actions, null) { }
 
         public override string ToString()
         {

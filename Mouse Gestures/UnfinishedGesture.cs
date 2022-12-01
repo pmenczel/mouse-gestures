@@ -48,6 +48,18 @@ namespace WMG.Gestures
         public POINT CurrentMousePosition() => movementData.Last();
 
         /*
+         * Find the mouse position at which the gesture was started
+         */
+        public POINT InitialMousePosition()
+        {
+            AnnotatedAction firstAction = completedActions.FirstOrDefault();
+            if (firstAction == null)
+                return movementData.First();
+            else
+                return firstAction.Position;
+        }
+
+        /*
          * Find the latest completed action in this gesture (or null, if there is none).
          */
         public AnnotatedAction LatestAction() => completedActions.LastOrDefault();
@@ -94,7 +106,13 @@ namespace WMG.Gestures
             ClearMovementData(CurrentMousePosition());
         }
 
-        public Gesture Complete() => new Gesture(InitialModifiers, from a in completedActions select a.Action);
+        public Gesture Complete(POINT mousePosition)
+        {
+            ClearMovementData(mousePosition);
+            return new Gesture(InitialModifiers,
+                               from a in completedActions select a.Action,
+                               this);
+        }
     }
 
     public class AnnotatedAction

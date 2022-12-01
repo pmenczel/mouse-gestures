@@ -128,7 +128,7 @@ namespace WMG.Gestures
             }
             else
             {
-                var gesture = CurrentGesture.Complete();
+                var gesture = CurrentGesture.Complete(position);
                 new Thread(() => { cleanup?.Invoke(gesture); RaiseGestureComplete(gesture); }).Start();
             }
             CurrentGesture = null;
