@@ -3,7 +3,8 @@ using System.Collections.Generic;
 
 namespace WMG.Gestures
 {
-    /* There are three types of Action: mouse movements, mouse wheel movements and changes of modifier keys.
+    /* 
+     * There are three types of Action: mouse movements, mouse wheel movements and changes of modifier keys.
      * The former two are specified by a direction (up, down, left or right), the latter is specified by the new set of pressed modifier keys (shift, control, alt, left mouse button).
      */
     public abstract class WMGAction // named "WMGAction" instead of just "Action" because of System.Action
