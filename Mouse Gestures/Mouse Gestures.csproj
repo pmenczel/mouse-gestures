@@ -51,6 +51,7 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CoreReactions.cs" />
     <Compile Include="Reaction.cs" />
     <Compile Include="WMGAction.cs" />
     <Compile Include="Gesture.cs" />

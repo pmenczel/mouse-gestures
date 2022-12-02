@@ -23,7 +23,7 @@ namespace WMG.Core
 
         private readonly IGestureAnalyzer analyzer;
 
-        private bool forceDisabled = false; // can be set to true temporarily for simulating events without notifying the analyzer
+        internal bool forceDisabled = false; // can be set to true temporarily for simulating events without notifying the analyzer
 
         public NativeInterface(IGestureAnalyzer analyzer)
         {

@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using WMG.Core;
+using WMG.Gestures;
 
 namespace WMG.Reactions
 {
@@ -16,6 +15,8 @@ namespace WMG.Reactions
 
         public abstract ReactionType RType { get; }
 
+        public abstract void Perform(Gesture gesture, IContext context);
+
         public static Reaction FromString(string str)
         {
             foreach (ReactionType t in ReactionType.KNOWN_TYPES)
@@ -28,6 +29,24 @@ namespace WMG.Reactions
             }
             return null;
         }
+    }
+
+    public interface IContext
+    {
+        /*
+         * Exits the entire application.
+         */
+        void ExitApplication();
+
+        /*
+         * Usage:
+         *      using (context.DisableTemporarily())
+         *      {
+         *          // do stuff while gesture recognition is disabled
+         *      }
+         *      // gesture recognition is enabled again
+         */
+        IDisposable DisableTemporarily();
     }
 
     /*
