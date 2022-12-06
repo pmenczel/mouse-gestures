@@ -26,10 +26,7 @@ namespace WMG.Reactions
             {
                 return IDENTIFIER;
             }
-            else
-            {
-                return null;
-            }
+            return null;
         }
 
         public override Reaction LoadString(string str)
@@ -38,10 +35,7 @@ namespace WMG.Reactions
             {
                 return new ExitReaction();
             }
-            else
-            {
-                return null;
-            }
+            return null;
         }
     }
 }

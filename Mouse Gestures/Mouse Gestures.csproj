@@ -53,6 +53,7 @@
   <ItemGroup>
     <Compile Include="CoreReactions.cs" />
     <Compile Include="Reaction.cs" />
+    <Compile Include="WinReactions.cs" />
     <Compile Include="WMGAction.cs" />
     <Compile Include="Gesture.cs" />
     <Compile Include="GestureAnalyzer.cs" />

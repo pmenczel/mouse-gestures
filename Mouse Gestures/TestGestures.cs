@@ -8,8 +8,11 @@ namespace WMG
 {
     public class TestGestures : ApplicationContext
     {
+        private static readonly Gesture EXIT_GESTURE = new Gesture(Modifiers.NONE, new WMG.Gestures.WMGAction[] { new MouseMovementAction(Direction.RIGHT), new MouseMovementAction(Direction.LEFT), new MouseMovementAction(Direction.RIGHT) });
+        private static readonly Reaction EXIT_REACTION = new ExitReaction();
+
         private static readonly Gesture CLOSE_GESTURE = new Gesture(Modifiers.NONE, new WMG.Gestures.WMGAction[] { new MouseMovementAction(Direction.DOWN), new MouseMovementAction(Direction.RIGHT) });
-        private static readonly Reaction CLOSE_REACTION = new ExitReaction();
+        private static readonly Reaction CLOSE_REACTION = new CloseWindowReaction(ReactionTarget.ACTIVE_WINDOW);
 
         public static void Main(string[] args)
         {
@@ -28,6 +31,10 @@ namespace WMG
                 if (gesture.Equals(CLOSE_GESTURE))
                 {
                     CLOSE_REACTION.Perform(gesture, context);
+                }
+                else if (gesture.Equals(EXIT_GESTURE))
+                {
+                    EXIT_REACTION.Perform(gesture, context);
                 }
             };
 

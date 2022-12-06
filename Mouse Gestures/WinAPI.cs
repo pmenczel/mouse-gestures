@@ -214,6 +214,25 @@ namespace WMG.Core
                 return GetAncestor(window, GetAncestorFlags.GetRoot);
         }
 
+        internal enum Messages : uint
+        {
+            // https://learn.microsoft.com/en-us/windows/win32/winmsg/wm-size
+            WM_SIZE = 0x0005,
+
+            // https://learn.microsoft.com/en-us/windows/win32/winmsg/wm-move
+            WM_MOVE = 0x0003,
+
+            // https://learn.microsoft.com/en-us/windows/win32/winmsg/wm-close
+            WM_CLOSE = 0x0010
+        }
+
+        /*
+         * https://pinvoke.net/default.aspx/user32/SendMessage.html
+         * https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-sendmessage
+         */
+        [DllImport("user32.dll")]
+        public static extern IntPtr SendMessage(IntPtr hWnd, uint Msg, UIntPtr wParam, IntPtr lParam);
+
         /*
          * http://www.pinvoke.net/default.aspx/user32.GetWindowText
          * https://docs.microsoft.com/en-us/windows/desktop/api/winuser/nf-winuser-getwindowtextw
