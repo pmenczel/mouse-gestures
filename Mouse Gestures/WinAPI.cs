@@ -223,15 +223,27 @@ namespace WMG.Core
             WM_MOVE = 0x0003,
 
             // https://learn.microsoft.com/en-us/windows/win32/winmsg/wm-close
-            WM_CLOSE = 0x0010
+            WM_CLOSE = 0x0010,
+
+            // https://learn.microsoft.com/en-us/windows/win32/menurc/wm-syscommand
+            WM_SYSCOMMAND = 0x0112,
+            SC_CLOSE = 0xF060
         }
 
         /*
          * https://pinvoke.net/default.aspx/user32/SendMessage.html
          * https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-sendmessage
          */
-        [DllImport("user32.dll")]
+        [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
         public static extern IntPtr SendMessage(IntPtr hWnd, uint Msg, UIntPtr wParam, IntPtr lParam);
+
+        /*
+         * https://www.pinvoke.net/default.aspx/user32.postmessage
+         * https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-postmessagea
+         */
+        [return: MarshalAs(UnmanagedType.Bool)]
+        [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+        public static extern bool PostMessage(IntPtr hWnd, uint Msg, UIntPtr wParam, IntPtr lParam);
 
         /*
          * http://www.pinvoke.net/default.aspx/user32.GetWindowText

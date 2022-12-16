@@ -12,7 +12,7 @@ namespace WMG
         private static readonly Reaction EXIT_REACTION = new ExitReaction();
 
         private static readonly Gesture CLOSE_GESTURE = new Gesture(Modifiers.NONE, new WMG.Gestures.WMGAction[] { new MouseMovementAction(Direction.DOWN), new MouseMovementAction(Direction.RIGHT) });
-        private static readonly Reaction CLOSE_REACTION = new CloseWindowReaction(ReactionTarget.ACTIVE_WINDOW);
+        private static readonly Reaction CLOSE_REACTION = new CloseWindowReaction(ReactionTarget.WINDOW_AT_GESTURE_START);
 
         public static void Main(string[] args)
         {

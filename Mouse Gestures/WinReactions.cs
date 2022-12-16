@@ -54,7 +54,13 @@ namespace WMG.Reactions
         {
             IntPtr window = ReactionTargetUtils.FindTargetWindow(gesture, Target);
             if (window != IntPtr.Zero)
-                WinAPI.SendMessage(window, (uint)WinAPI.Messages.WM_CLOSE, UIntPtr.Zero, IntPtr.Zero);
+            {
+                // WinAPI.PostMessage(window, (uint)WinAPI.Messages.WM_CLOSE, UIntPtr.Zero, IntPtr.Zero);
+                WinAPI.PostMessage(window,
+                    (uint)WinAPI.Messages.WM_SYSCOMMAND,
+                    new UIntPtr((uint)WinAPI.Messages.SC_CLOSE),
+                    IntPtr.Zero);
+            }
         }
     }
 
