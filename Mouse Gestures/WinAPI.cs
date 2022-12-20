@@ -227,7 +227,10 @@ namespace WMG.Core
 
             // https://learn.microsoft.com/en-us/windows/win32/menurc/wm-syscommand
             WM_SYSCOMMAND = 0x0112,
-            SC_CLOSE = 0xF060
+            SC_MINIMIZE = 0xF020,
+            SC_MAXIMIZE = 0xF030,
+            SC_CLOSE = 0xF060,
+            SC_RESTORE = 0xF120
         }
 
         /*
@@ -269,6 +272,72 @@ namespace WMG.Core
             GetWindowText(hWnd, stringBuilder, stringBuilder.Capacity);
             return stringBuilder.ToString();
         }
+
+        /*
+         * Required for GetWindowPlacement function
+         * https://learn.microsoft.com/en-us/windows/win32/api/winuser/ns-winuser-windowplacement
+         * https://pinvoke.net/default.aspx/Structures/WINDOWPLACEMENT.html
+         */
+        [Serializable]
+        [StructLayout(LayoutKind.Sequential)]
+        internal struct WINDOWPLACEMENT
+        {
+            public uint Length;
+            public uint Flags;
+            public uint ShowCmd;
+            public POINT MinPosition;
+            public POINT MaxPosition;
+            public RECT NormalPosition;
+
+            public static WINDOWPLACEMENT Default
+            {
+                get
+                {
+                    WINDOWPLACEMENT result = new WINDOWPLACEMENT();
+                    result.Length = (uint)Marshal.SizeOf(result);
+                    return result;
+                }
+            }
+        }
+
+        // https://pinvoke.net/default.aspx/Structures/RECT.html
+        [StructLayout(LayoutKind.Sequential)]
+        public struct RECT
+        {
+            public int Left, Top, Right, Bottom;
+        }
+
+        /*
+         * https://www.pinvoke.net/default.aspx/user32.getwindowplacement
+         * https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getwindowplacement
+         */
+        [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        public static extern bool GetWindowPlacement(IntPtr hWnd, ref WINDOWPLACEMENT lpwndpl);
+
+        // https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-showwindow
+        internal enum ShowCommands : int
+        {
+            SW_SHOWNORMAL = 1,
+            SW_SHOWMINIMIZED = 2,
+            SW_SHOWMAXIMIZED = 3,
+            SW_MAXIMIZE = 3,
+            SW_MINIMIZE = 6,
+            SW_RESTORE = 9
+        }
+
+        /*
+         * https://www.pinvoke.net/default.aspx/user32.showwindow
+         * https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-showwindow
+         */
+        [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+        internal static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+
+        [DllImport("User32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+        internal static extern bool MoveWindow(IntPtr hWnd, int x, int y, int width, int height, bool redraw);
+
+        [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+        internal static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int x, int y, int cx, int cy, UInt32 uFlags);
 
         #endregion
 
