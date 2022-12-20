@@ -16,7 +16,7 @@ namespace WMG.Reactions
     {
         private ExitType() { }
 
-        private static readonly string IDENTIFIER = "ExitType";
+        private static readonly string IDENTIFIER = "Exit";
 
         public static readonly ExitType INSTANCE = new ExitType();
 

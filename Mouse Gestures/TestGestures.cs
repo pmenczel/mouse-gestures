@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Windows.Forms;
 using WMG.Core;
 using WMG.Gestures;
@@ -8,11 +9,23 @@ namespace WMG
 {
     public class TestGestures : ApplicationContext
     {
-        private static readonly Gesture EXIT_GESTURE = new Gesture(Modifiers.NONE, new WMG.Gestures.WMGAction[] { new MouseMovementAction(Direction.RIGHT), new MouseMovementAction(Direction.LEFT), new MouseMovementAction(Direction.RIGHT) });
-        private static readonly Reaction EXIT_REACTION = new ExitReaction();
+        private static readonly Dictionary<Gesture, Reaction> GESTURES = new Dictionary<Gesture, Reaction>();
 
-        private static readonly Gesture CLOSE_GESTURE = new Gesture(Modifiers.NONE, new WMG.Gestures.WMGAction[] { new MouseMovementAction(Direction.DOWN), new MouseMovementAction(Direction.RIGHT) });
-        private static readonly Reaction CLOSE_REACTION = new CloseWindowReaction(ReactionTarget.WINDOW_AT_GESTURE_START);
+        static TestGestures()
+        {
+            GESTURES.Add(
+                new Gesture(Modifiers.NONE, new WMG.Gestures.WMGAction[] { new MouseMovementAction(Direction.RIGHT), new MouseMovementAction(Direction.LEFT), new MouseMovementAction(Direction.RIGHT) }),
+                new ExitReaction());
+            GESTURES.Add(
+                new Gesture(Modifiers.NONE, new WMG.Gestures.WMGAction[] { new MouseMovementAction(Direction.DOWN), new MouseMovementAction(Direction.RIGHT) }),
+                new CloseWindowReaction(ReactionTarget.WINDOW_AT_GESTURE_START));
+            GESTURES.Add(
+                new Gesture(Modifiers.NONE, new WMG.Gestures.WMGAction[] { new MouseMovementAction(Direction.UP) }),
+                new MaximizeWindowReaction(ReactionTarget.WINDOW_AT_GESTURE_START));
+            GESTURES.Add(
+                new Gesture(Modifiers.NONE, new WMG.Gestures.WMGAction[] { new MouseMovementAction(Direction.DOWN) }),
+                new MinimizeWindowReaction(ReactionTarget.WINDOW_AT_GESTURE_START, true));
+        }
 
         public static void Main(string[] args)
         {
@@ -28,13 +41,9 @@ namespace WMG
 
             analyzer.OnGestureComplete += gesture =>
             {
-                if (gesture.Equals(CLOSE_GESTURE))
+                if (GESTURES.ContainsKey(gesture))
                 {
-                    CLOSE_REACTION.Perform(gesture, context);
-                }
-                else if (gesture.Equals(EXIT_GESTURE))
-                {
-                    EXIT_REACTION.Perform(gesture, context);
+                    GESTURES[gesture].Perform(gesture, context);
                 }
             };
 
