@@ -113,7 +113,7 @@ namespace WMG.Core
             if (nCode < 0 || forceDisabled)
                 return WinAPI.CallNextHookEx(mouseHook, nCode, wParam, lParam);
             MsLLHookStruct mouseInfo = Marshal.PtrToStructure<MsLLHookStruct>(lParam);
-            POINT currentMouseLocation = mouseInfo.pt;
+            Point currentMouseLocation = mouseInfo.pt;
 
             // whether the event should be consumed (i.e., whether CallNextHookEx should be called at the end of the method)
             bool consume = false;
@@ -213,7 +213,7 @@ namespace WMG.Core
          * Determines whether a gesture can be started right now by a right mouse click at the specified location.
          * TODO: the idea is that we should not register mouse gestures in applications such as Opera, which use mouse gestures themselves
          */
-        private bool CanStartGestureAt(POINT mouseLocation)
+        private bool CanStartGestureAt(Point mouseLocation)
         {
             return true;
         }
@@ -302,7 +302,7 @@ namespace WMG.Core
             }
             if (initialModifiers.Lmb && !currentModifiers.Lmb)
             {
-                bool succ = WinAPI.GetCursorPos(out POINT currentMousePos); // it's probably not too important where we release the mouse, but let's try to use the current mouse position
+                bool succ = WinAPI.GetCursorPos(out Point currentMousePos); // it's probably not too important where we release the mouse, but let's try to use the current mouse position
                 WinAPI.mouse_event(MouseEventFlags.ABSOLUTE | MouseEventFlags.LEFTUP, succ ? currentMousePos.x : 0, succ ? currentMousePos.y : 0, 0, UIntPtr.Zero);
             }
 
@@ -312,7 +312,7 @@ namespace WMG.Core
         /*
          * This will be called after a click-through event. Here, we must simulate the right mouse button click that we already, "accidentally", consumed.
          */
-        private void ClickThrough(POINT position)
+        private void ClickThrough(Point position)
         {
             forceDisabled = true;
             WinAPI.mouse_event(MouseEventFlags.ABSOLUTE | MouseEventFlags.RIGHTDOWN, position.x, position.y, 0, UIntPtr.Zero);

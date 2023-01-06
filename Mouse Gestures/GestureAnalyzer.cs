@@ -86,7 +86,7 @@ namespace WMG.Gestures
             }
         }
         
-        private void RaiseClickThrough(POINT arg)
+        private void RaiseClickThrough(Point arg)
         {
             if (OnClickThrough == null) return;
             foreach (ClickThroughHandler x in OnClickThrough.GetInvocationList())
@@ -99,7 +99,7 @@ namespace WMG.Gestures
          * Notify the analyzer that the right mouse button was pressed.
          * Returns: true, since we must assume at this point that the event is the beginning of a gesture.
          */
-        public bool RmbDown(POINT position, Modifiers modifiers)
+        public bool RmbDown(Point position, Modifiers modifiers)
         {
             // start new gesture
             CurrentGesture = new UnfinishedGesture(modifiers, position);
@@ -116,7 +116,7 @@ namespace WMG.Gestures
          * Returns: whether this event is part of a gesture.
          * Note that this will return true in the case of a click-through, for consistency with the previous RmbDown event.
          */
-        public bool RmbUp(POINT position, Action<Gesture> cleanup)
+        public bool RmbUp(Point position, Action<Gesture> cleanup)
         {
             if (CurrentGesture == null)
                 return false;
@@ -148,7 +148,7 @@ namespace WMG.Gestures
          * Notify the analyzer that the mouse was moved.
          * Returns: whether this event is part of a gesture.
          */
-        public bool MouseMovement(POINT newPosition)
+        public bool MouseMovement(Point newPosition)
         {
             if (CurrentGesture == null)
                 return false;
@@ -268,7 +268,7 @@ namespace WMG.Gestures
          * Returns the direction from p1 to p2.
          * Returns null if the squared distance between the points is smaller than Settings.WiggleRoom.
          */
-        private Direction? DetermineDirection(POINT p1, POINT p2)
+        private Direction? DetermineDirection(Point p1, Point p2)
         {
             if (p1.SquareDistance(p2) < WiggleRoomSq)
             {

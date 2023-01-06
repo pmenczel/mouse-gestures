@@ -14,10 +14,13 @@ namespace WMG
         static TestGestures()
         {
             GESTURES.Add(
-                new Gesture(Modifiers.NONE, new WMG.Gestures.WMGAction[] { new MouseMovementAction(Direction.RIGHT), new MouseMovementAction(Direction.LEFT), new MouseMovementAction(Direction.RIGHT) }),
+                new Gesture(Modifiers.NONE, new WMG.Gestures.WMGAction[] { new MouseMovementAction(Direction.RIGHT),
+                                                                           new MouseMovementAction(Direction.LEFT),
+                                                                           new MouseMovementAction(Direction.RIGHT) }),
                 new ExitReaction());
             GESTURES.Add(
-                new Gesture(Modifiers.NONE, new WMG.Gestures.WMGAction[] { new MouseMovementAction(Direction.DOWN), new MouseMovementAction(Direction.RIGHT) }),
+                new Gesture(Modifiers.NONE, new WMG.Gestures.WMGAction[] { new MouseMovementAction(Direction.DOWN),
+                                                                           new MouseMovementAction(Direction.RIGHT) }),
                 new CloseWindowReaction(ReactionTarget.WINDOW_AT_GESTURE_START));
             GESTURES.Add(
                 new Gesture(Modifiers.NONE, new WMG.Gestures.WMGAction[] { new MouseMovementAction(Direction.UP) }),
@@ -25,6 +28,9 @@ namespace WMG
             GESTURES.Add(
                 new Gesture(Modifiers.NONE, new WMG.Gestures.WMGAction[] { new MouseMovementAction(Direction.DOWN) }),
                 new MinimizeWindowReaction(ReactionTarget.WINDOW_AT_GESTURE_START, true));
+            GESTURES.Add(
+                new Gesture(Modifiers.NONE, new WMG.Gestures.WMGAction[] { new MouseMovementAction(Direction.LEFT) }),
+                new MoveWindowReaction(ReactionTarget.WINDOW_AT_GESTURE_START, Rect.FromDimensions(100, 100, 600, 400)));
         }
 
         public static void Main(string[] args)

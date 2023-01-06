@@ -5,7 +5,7 @@ namespace WMG.Gestures
 {
     public delegate void UnfinishedGestureHandler(UnfinishedGesture currentGesture);
     public delegate void GestureHandler(Gesture gesture);
-    public delegate void ClickThroughHandler(POINT mousePosition);
+    public delegate void ClickThroughHandler(Point mousePosition);
 
     /*
      * A type capable of analyzing detected mouse / keyboard events, converting them into mouse gestures.
@@ -16,18 +16,18 @@ namespace WMG.Gestures
         /*
          * Notify the analyzer that the right mouse button was pressed.
          */
-        bool RmbDown(POINT position, Modifiers modifiers);
+        bool RmbDown(Point position, Modifiers modifiers);
 
         /*
          * Notify the analyzer that the right mouse button was released.
          * If this event signifies the completion of a gesture, the cleanup callback should be called in a separate thread and before OnGestureComplete is triggered.
          */
-        bool RmbUp(POINT position, Action<Gesture> cleanup);
+        bool RmbUp(Point position, Action<Gesture> cleanup);
 
         /*
          * Notify the analyzer that the mouse was moved.
          */
-        bool MouseMovement(POINT newPosition);
+        bool MouseMovement(Point newPosition);
 
         /*
          * Notify the analyzer that the mouse wheel was moved.

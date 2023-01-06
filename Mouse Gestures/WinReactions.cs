@@ -15,7 +15,7 @@ namespace WMG.Reactions
     {
         public static IntPtr FindTargetWindow(Gesture gesture, ReactionTarget target)
         {
-            POINT? position = null;
+            Point? position = null;
             switch (target)
             {
                 case ReactionTarget.ACTIVE_WINDOW:
@@ -166,10 +166,10 @@ namespace WMG.Reactions
             {
                 string remainder = str.Substring(IDENTIFIER.Length);
                 string[] parts = remainder.Split(';');
-                if (parts.Length != 2)
-                    return null;
-                if (Enum.TryParse<ReactionTarget>(parts[0], out ReactionTarget target)
-                    && bool.TryParse(parts[1], out bool rim))
+                
+                if (parts.Length == 2 &&
+                    Enum.TryParse<ReactionTarget>(parts[0], out ReactionTarget target) &&
+                    bool.TryParse(parts[1], out bool rim))
                 {
                     return new MinimizeWindowReaction(target, rim);
                 }
@@ -227,6 +227,70 @@ namespace WMG.Reactions
                 if (Enum.TryParse<ReactionTarget>(targetString, out ReactionTarget target))
                 {
                     return new MaximizeWindowReaction(target);
+                }
+            }
+            return null;
+        }
+    }
+
+    public sealed class MoveWindowReaction : Reaction
+    {
+        public override ReactionType RType => MoveWindowType.INSTANCE;
+
+        public ReactionTarget Target { get; }
+
+        public Rect Location { get; }
+
+        public MoveWindowReaction(ReactionTarget target, Rect location)
+        {
+            Target = target;
+            Location = location;
+        }
+
+        public override void Perform(Gesture gesture, IContext context)
+        {
+            IntPtr window = ReactionTargetUtils.FindTargetWindow(gesture, Target);
+            if (window != IntPtr.Zero)
+            {
+                WinAPI.MoveWindow(window, Location.Left, Location.Top, Location.Width, Location.Height, true);
+            }
+        }
+    }
+
+    public sealed class MoveWindowType : ReactionType
+    {
+        private MoveWindowType() { }
+
+        private static readonly string IDENTIFIER = "MoveWindow";
+
+        public static readonly MoveWindowType INSTANCE = new MoveWindowType();
+
+        public override string StoreString(Reaction r)
+        {
+            if (r is MoveWindowReaction m)
+            {
+                return IDENTIFIER + (int)m.Target + ';' +
+                    m.Location.Left + ";" + m.Location.Top + ";" +
+                    m.Location.Width + ";" + m.Location.Height;
+            }
+            return null;
+        }
+
+        public override Reaction LoadString(string str)
+        {
+            if(str.StartsWith(IDENTIFIER))
+            {
+                string remainder = str.Substring(IDENTIFIER.Length);
+                string[] parts = remainder.Split(';');
+
+                if (parts.Length == 5 &&
+                    Enum.TryParse<ReactionTarget>(parts[0], out ReactionTarget target)
+                    && int.TryParse(parts[1], out int l)
+                    && int.TryParse(parts[2], out int t)
+                    && int.TryParse(parts[3], out int w)
+                    && int.TryParse(parts[4], out int h))
+                {
+                    return new MoveWindowReaction(target, Rect.FromDimensions(l, t, w, h));
                 }
             }
             return null;

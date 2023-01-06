@@ -21,10 +21,10 @@ namespace WMG.Gestures
         private readonly List<AnnotatedAction> completedActions = new List<AnnotatedAction>();
         public IEnumerable<AnnotatedAction> CompletedActions => new List<AnnotatedAction>(completedActions);
 
-        private readonly List<POINT> movementData = new List<POINT>();
-        public IEnumerable<POINT> MovementData => new List<POINT>(movementData);
+        private readonly List<Point> movementData = new List<Point>();
+        public IEnumerable<Point> MovementData => new List<Point>(movementData);
 
-        public UnfinishedGesture(Modifiers initialModifiers, POINT initialMousePosition)
+        public UnfinishedGesture(Modifiers initialModifiers, Point initialMousePosition)
         {
             InitialModifiers = initialModifiers;
             movementData.Add(initialMousePosition);
@@ -45,12 +45,12 @@ namespace WMG.Gestures
         /*
          * Find the current mouse position, according to the recorded mouse movement data
          */
-        public POINT CurrentMousePosition() => movementData.Last();
+        public Point CurrentMousePosition() => movementData.Last();
 
         /*
          * Find the mouse position at which the gesture was started
          */
-        public POINT InitialMousePosition()
+        public Point InitialMousePosition()
         {
             AnnotatedAction firstAction = completedActions.FirstOrDefault();
             if (firstAction == null)
@@ -68,7 +68,7 @@ namespace WMG.Gestures
          * Add a new action to this unfinished gesture (mutating the object).
          * initialMousePosition is the mouse position at the start of the action.
          */
-        internal void RecordAction(WMGAction action, POINT initialMousePosition)
+        internal void RecordAction(WMGAction action, Point initialMousePosition)
         {
             completedActions.Add(new AnnotatedAction(action, DateTime.Now, initialMousePosition));
         }
@@ -84,7 +84,7 @@ namespace WMG.Gestures
         /*
          * Add new movement data to this unfinished gesture (mutating the object).
          */
-        internal void RecordMovement(POINT mousePosition)
+        internal void RecordMovement(Point mousePosition)
         {
             movementData.Add(mousePosition);
         }
@@ -92,7 +92,7 @@ namespace WMG.Gestures
         /*
          * Clears the recorded movement data, adding the given point as the single new entry (mutating the object).
          */
-        internal void ClearMovementData(POINT newInitialPosition)
+        internal void ClearMovementData(Point newInitialPosition)
         {
             movementData.Clear();
             movementData.Add(newInitialPosition);
@@ -106,7 +106,7 @@ namespace WMG.Gestures
             ClearMovementData(CurrentMousePosition());
         }
 
-        public Gesture Complete(POINT mousePosition)
+        public Gesture Complete(Point mousePosition)
         {
             ClearMovementData(mousePosition);
             return new Gesture(InitialModifiers,
@@ -119,9 +119,9 @@ namespace WMG.Gestures
     {
         public WMGAction Action { get; }
         public DateTime Timestamp { get; }
-        public POINT Position { get; }
+        public Point Position { get; }
 
-        public AnnotatedAction(WMGAction action, DateTime timestamp, POINT position)
+        public AnnotatedAction(WMGAction action, DateTime timestamp, Point position)
         {
             Action = action;
             Timestamp = timestamp;

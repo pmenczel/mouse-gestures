@@ -58,7 +58,7 @@ namespace WMG.Core
         [StructLayout(LayoutKind.Sequential)]
         internal struct MsLLHookStruct
         {
-            internal POINT pt;
+            internal Point pt;
             internal int mouseData;
             internal int flags;
             internal int time;
@@ -181,7 +181,7 @@ namespace WMG.Core
          * https://docs.microsoft.com/en-us/windows/desktop/api/winuser/nf-winuser-windowfrompoint
          */
         [DllImport("user32.dll")]
-        internal static extern IntPtr WindowFromPoint(POINT p);
+        internal static extern IntPtr WindowFromPoint(Point p);
 
         /*
          * Used by *GetAncestor*.
@@ -205,7 +205,7 @@ namespace WMG.Core
          * Helper method for a commonly used requirement.
          * This is - as far as I can tell - the top level window at the given point.
          */
-        internal static IntPtr RootWindowFromPoint(POINT p)
+        internal static IntPtr RootWindowFromPoint(Point p)
         {
             IntPtr window = WindowFromPoint(p);
             if (window == IntPtr.Zero)
@@ -214,6 +214,9 @@ namespace WMG.Core
                 return GetAncestor(window, GetAncestorFlags.GetRoot);
         }
 
+        /*
+         * Used by SendMessage / PostMessage.
+         */
         internal enum Messages : uint
         {
             // https://learn.microsoft.com/en-us/windows/win32/winmsg/wm-size
@@ -285,9 +288,9 @@ namespace WMG.Core
             public uint Length;
             public uint Flags;
             public uint ShowCmd;
-            public POINT MinPosition;
-            public POINT MaxPosition;
-            public RECT NormalPosition;
+            public Point MinPosition;
+            public Point MaxPosition;
+            public Rect NormalPosition;
 
             public static WINDOWPLACEMENT Default
             {
@@ -300,13 +303,6 @@ namespace WMG.Core
             }
         }
 
-        // https://pinvoke.net/default.aspx/Structures/RECT.html
-        [StructLayout(LayoutKind.Sequential)]
-        public struct RECT
-        {
-            public int Left, Top, Right, Bottom;
-        }
-
         /*
          * https://www.pinvoke.net/default.aspx/user32.getwindowplacement
          * https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getwindowplacement
@@ -315,7 +311,9 @@ namespace WMG.Core
         [return: MarshalAs(UnmanagedType.Bool)]
         public static extern bool GetWindowPlacement(IntPtr hWnd, ref WINDOWPLACEMENT lpwndpl);
 
-        // https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-showwindow
+        /*
+         * Used by ShowWindow
+         */
         internal enum ShowCommands : int
         {
             SW_SHOWNORMAL = 1,
@@ -333,11 +331,12 @@ namespace WMG.Core
         [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
         internal static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
 
+        /*
+         * https://www.pinvoke.net/default.aspx/user32.movewindow
+         * https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-movewindow
+         */
         [DllImport("User32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
         internal static extern bool MoveWindow(IntPtr hWnd, int x, int y, int width, int height, bool redraw);
-
-        [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
-        internal static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int x, int y, int cx, int cy, UInt32 uFlags);
 
         #endregion
 
@@ -361,7 +360,7 @@ namespace WMG.Core
          */
         [DllImport("user32.dll", SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
-        internal static extern bool GetCursorPos(out POINT lpPoint);
+        internal static extern bool GetCursorPos(out Point lpPoint);
 
         /*
          * http://www.pinvoke.net/default.aspx/kernel32/GetModuleHandle.html
@@ -379,14 +378,37 @@ namespace WMG.Core
      * https://docs.microsoft.com/en-us/windows/desktop/api/windef/ns-windef-point
      */
     [StructLayout(LayoutKind.Sequential)]
-    public readonly struct POINT
+    public readonly struct Point
     {
         public readonly int x;
         public readonly int y;
 
-        public double SquareDistance(POINT other) =>
+        public double SquareDistance(Point other) =>
             (x - other.x) * (x - other.x) + (y - other.y) * (y - other.y);
 
         public override string ToString() => $"({x}, {y})";
+    }
+
+    /* 
+     * Part of WINDOWPLACEMENT struct, made public for convenience
+     * https://pinvoke.net/default.aspx/Structures/RECT.html
+     */
+    [StructLayout(LayoutKind.Sequential)]
+    public readonly struct Rect
+    {
+        public readonly int Left, Top, Right, Bottom;
+
+        public Rect(int l, int t, int r, int b)
+        {
+            this.Left = l;
+            this.Top = t;
+            this.Right = r;
+            this.Bottom = b;
+        }
+
+        public int Width => Right - Left;
+        public int Height => Bottom - Top;
+
+        public static Rect FromDimensions(int left, int top, int width, int height) => new Rect(left, top, left + width, top + height);
     }
 }
