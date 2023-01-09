@@ -1,10 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Text;
+using static WMG.Core.WinAPI;
 
 namespace WMG.Core
 {
-    internal sealed class WinAPI
+    public sealed class WinAPI
     {
         #region Mouse / keyboard hooks
 
@@ -14,7 +16,7 @@ namespace WMG.Core
          * https://docs.microsoft.com/en-us/windows/desktop/api/winuser/nf-winuser-setwindowshookexa
          * (we only include those constants that we need here)
          */
-        internal enum HookType : int
+        public enum HookType : int
         {
             WH_KEYBOARD = 2,
             WH_KEYBOARD_LL = 13,
@@ -26,7 +28,7 @@ namespace WMG.Core
          * WM constants which are supplied as wParam arguments to HookProc for low level mouse events.
          * http://www.pinvoke.net/default.aspx/Constants/WM.html
          */
-        internal enum MouseInput : int
+        public enum MouseInput : int
         {
             WM_LBUTTONDOWN = 0x0201,
             WM_LBUTTONUP = 0x0202,
@@ -41,7 +43,7 @@ namespace WMG.Core
          * WM constants which are supplied as wParam arguments to HookProc for low level keyboard events.
          * http://www.pinvoke.net/default.aspx/Constants/WM.html
          */
-        internal enum KeyInput : int
+        public enum KeyInput : int
         {
             WM_KEYDOWN = 0x0100,
             WM_KEYUP = 0x0101,
@@ -56,13 +58,13 @@ namespace WMG.Core
          * (leaving MsLLHookStructFlags as int for simplicity; wondering if all of these should be uints actually?)
          */
         [StructLayout(LayoutKind.Sequential)]
-        internal struct MsLLHookStruct
+        public struct MsLLHookStruct
         {
-            internal Point pt;
-            internal int mouseData;
-            internal int flags;
-            internal int time;
-            internal UIntPtr dwExtraInfo;
+            Point pt;
+            int mouseData;
+            int flags;
+            int time;
+            UIntPtr dwExtraInfo;
         }
 
         /*
@@ -72,13 +74,13 @@ namespace WMG.Core
          * (leaving KbdLLHookStructFlags as uint for simplicity)
          */
         [StructLayout(LayoutKind.Sequential)]
-        internal class KbdLLHookStruct
+        public class KbdLLHookStruct
         {
-            internal uint vkCode;
-            internal uint scanCode;
-            internal uint flags;
-            internal uint time;
-            internal UIntPtr dwExtraInfo;
+            uint vkCode;
+            uint scanCode;
+            uint flags;
+            uint time;
+            UIntPtr dwExtraInfo;
         }
 
         /*
@@ -94,21 +96,21 @@ namespace WMG.Core
          * https://msdn.microsoft.com/en-us/library/windows/desktop/ms644985.aspx
          * but we will use the same delegate and marshal wParam / lParam to the required types manually.
          */
-        internal delegate IntPtr HookProc(int code, IntPtr wParam, IntPtr lParam);
+        public delegate IntPtr HookProc(int code, IntPtr wParam, IntPtr lParam);
 
         /*
          * http://www.pinvoke.net/default.aspx/user32/SetWindowsHookEx.html
          * https://docs.microsoft.com/en-us/windows/desktop/api/winuser/nf-winuser-setwindowshookexa
          */
         [DllImport("user32.dll", SetLastError = true)]
-        internal static extern IntPtr SetWindowsHookEx(HookType idHook, HookProc lpfn, IntPtr hMod, uint dwThreadId);
+        public static extern IntPtr SetWindowsHookEx(HookType idHook, HookProc lpfn, IntPtr hMod, uint dwThreadId);
 
         /*
          * http://www.pinvoke.net/default.aspx/user32/UnhookWindowsHookEx.html
          * https://docs.microsoft.com/en-us/windows/desktop/api/winuser/nf-winuser-unhookwindowshookex
          */
         [DllImport("user32.dll", SetLastError = true)]
-        internal static extern bool UnhookWindowsHookEx(IntPtr hhk);
+        public static extern bool UnhookWindowsHookEx(IntPtr hhk);
 
         /*
          * http://www.pinvoke.net/default.aspx/user32/CallNextHookEx.html
@@ -116,7 +118,7 @@ namespace WMG.Core
          * We do not require the overloaded versions for now, since we treat LowLevelMouseProc and LowLevelKeyboardProc as HookProc.
          */
         [DllImport("user32.dll")]
-        internal static extern IntPtr CallNextHookEx(IntPtr hhk, int nCode, IntPtr wParam, IntPtr lParam);
+        public static extern IntPtr CallNextHookEx(IntPtr hhk, int nCode, IntPtr wParam, IntPtr lParam);
 
         #endregion
 
@@ -128,7 +130,7 @@ namespace WMG.Core
          * https://docs.microsoft.com/en-us/windows/desktop/api/winuser/nf-winuser-mouse_event
          */
         [Flags]
-        internal enum MouseEventFlags : uint
+        public enum MouseEventFlags : uint
         {
             LEFTDOWN = 0x00000002,
             LEFTUP = 0x00000004,
@@ -149,21 +151,21 @@ namespace WMG.Core
          *    A positive value indicates that the wheel was rotated forward, away from the user; a negative value indicates that the wheel was rotated backward, toward the user.
          *    One wheel click is defined as WHEEL_DELTA, which is 120.
          */
-        internal const int WHEEL_DELTA = 120;
+        public const int WHEEL_DELTA = 120;
 
         /*
          * http://www.pinvoke.net/default.aspx/user32/mouse_event.html
          * https://docs.microsoft.com/en-us/windows/desktop/api/winuser/nf-winuser-mouse_event
          */
         [DllImport("user32.dll")]
-        internal static extern void mouse_event(MouseEventFlags dwFlags, int dx, int dy, uint dwData, UIntPtr dwExtraInfo);
+        public static extern void mouse_event(MouseEventFlags dwFlags, int dx, int dy, uint dwData, UIntPtr dwExtraInfo);
 
         /*
          * http://www.pinvoke.net/default.aspx/user32/keybd_event.html
          * https://docs.microsoft.com/en-us/windows/desktop/api/winuser/nf-winuser-keybd_event
          */
         [DllImport("user32.dll")]
-        internal static extern void keybd_event(byte bVk, byte bScan, uint dwFlags, UIntPtr dwExtraInfo);
+        public static extern void keybd_event(byte bVk, byte bScan, uint dwFlags, UIntPtr dwExtraInfo);
 
         #endregion
 
@@ -174,20 +176,20 @@ namespace WMG.Core
          * https://docs.microsoft.com/en-us/windows/desktop/api/winuser/nf-winuser-getforegroundwindow
          */
         [DllImport("user32.dll")]
-        internal static extern IntPtr GetForegroundWindow();
+        public static extern IntPtr GetForegroundWindow();
 
         /*
          * http://www.pinvoke.net/default.aspx/user32.WindowFromPoint
          * https://docs.microsoft.com/en-us/windows/desktop/api/winuser/nf-winuser-windowfrompoint
          */
         [DllImport("user32.dll")]
-        internal static extern IntPtr WindowFromPoint(Point p);
+        public static extern IntPtr WindowFromPoint(Point p);
 
         /*
          * Used by *GetAncestor*.
          * http://www.pinvoke.net/default.aspx/Enums/GetAncestor_Flags.html
          */
-        internal enum GetAncestorFlags : uint
+        public enum GetAncestorFlags : uint
         {
             GetParent = 1,
             GetRoot = 2,
@@ -199,13 +201,13 @@ namespace WMG.Core
          * https://docs.microsoft.com/en-us/windows/desktop/api/winuser/nf-winuser-getancestor
          */
         [DllImport("user32.dll")]
-        internal static extern IntPtr GetAncestor(IntPtr hwnd, GetAncestorFlags flags);
+        public static extern IntPtr GetAncestor(IntPtr hwnd, GetAncestorFlags flags);
 
         /*
          * Helper method for a commonly used requirement.
          * This is - as far as I can tell - the top level window at the given point.
          */
-        internal static IntPtr RootWindowFromPoint(Point p)
+        public static IntPtr RootWindowFromPoint(Point p)
         {
             IntPtr window = WindowFromPoint(p);
             if (window == IntPtr.Zero)
@@ -217,7 +219,7 @@ namespace WMG.Core
         /*
          * Used by SendMessage / PostMessage.
          */
-        internal enum Messages : uint
+        public enum Messages : uint
         {
             // https://learn.microsoft.com/en-us/windows/win32/winmsg/wm-size
             WM_SIZE = 0x0005,
@@ -256,19 +258,19 @@ namespace WMG.Core
          * https://docs.microsoft.com/en-us/windows/desktop/api/winuser/nf-winuser-getwindowtextw
          */
         [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
-        internal static extern int GetWindowText(IntPtr hWnd, StringBuilder lpString, int nMaxCount);
+        public static extern int GetWindowText(IntPtr hWnd, StringBuilder lpString, int nMaxCount);
 
         /*
          * https://www.pinvoke.net/default.aspx/user32/GetWindowTextLength.html
          * https://docs.microsoft.com/en-us/windows/desktop/api/winuser/nf-winuser-getwindowtextlengthw
          */
         [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
-        internal static extern int GetWindowTextLength(IntPtr hWnd);
+        public static extern int GetWindowTextLength(IntPtr hWnd);
 
         /*
          * Helper method which converts the output of GetWindowText to a string.
          */
-        internal static string GetWindowText(IntPtr hWnd)
+        public static string GetWindowText(IntPtr hWnd)
         {
             int length = GetWindowTextLength(hWnd);
             var stringBuilder = new StringBuilder(length + 1);
@@ -283,7 +285,7 @@ namespace WMG.Core
          */
         [Serializable]
         [StructLayout(LayoutKind.Sequential)]
-        internal struct WINDOWPLACEMENT
+        public struct WINDOWPLACEMENT
         {
             public uint Length;
             public uint Flags;
@@ -314,7 +316,7 @@ namespace WMG.Core
         /*
          * Used by ShowWindow
          */
-        internal enum ShowCommands : int
+        public enum ShowCommands : int
         {
             SW_SHOWNORMAL = 1,
             SW_SHOWMINIMIZED = 2,
@@ -329,14 +331,14 @@ namespace WMG.Core
          * https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-showwindow
          */
         [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
-        internal static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+        public static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
 
         /*
          * https://www.pinvoke.net/default.aspx/user32.movewindow
          * https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-movewindow
          */
         [DllImport("User32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
-        internal static extern bool MoveWindow(IntPtr hWnd, int x, int y, int width, int height, bool redraw);
+        public static extern bool MoveWindow(IntPtr hWnd, int x, int y, int width, int height, bool redraw);
 
         #endregion
 
@@ -352,7 +354,7 @@ namespace WMG.Core
          *    Return value will be 0 if off and 1 if on as a toggle and -127 if key held down.
          */
         [DllImport("user32.dll")]
-        internal static extern short GetKeyState(System.Windows.Forms.Keys nVirtKey);
+        public static extern short GetKeyState(System.Windows.Forms.Keys nVirtKey);
 
         /*
          * https://www.pinvoke.net/default.aspx/user32.getcursorpos
@@ -360,14 +362,14 @@ namespace WMG.Core
          */
         [DllImport("user32.dll", SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
-        internal static extern bool GetCursorPos(out Point lpPoint);
+        public static extern bool GetCursorPos(out Point lpPoint);
 
         /*
          * http://www.pinvoke.net/default.aspx/kernel32/GetModuleHandle.html
          * https://docs.microsoft.com/en-us/windows/desktop/api/libloaderapi/nf-libloaderapi-getmodulehandlea
          */
         [DllImport("kernel32.dll", CharSet = CharSet.Unicode)]
-        internal static extern IntPtr GetModuleHandle(string lpModuleName);
+        public static extern IntPtr GetModuleHandle(string lpModuleName);
 
         #endregion
     }
@@ -390,7 +392,7 @@ namespace WMG.Core
     }
 
     /* 
-     * Part of WINDOWPLACEMENT struct, made public for convenience
+     * Part of WINDOWPLACEMENT and MONITORINFO structs, made public for convenience
      * https://pinvoke.net/default.aspx/Structures/RECT.html
      */
     [StructLayout(LayoutKind.Sequential)]
@@ -410,5 +412,7 @@ namespace WMG.Core
         public int Height => Bottom - Top;
 
         public static Rect FromDimensions(int left, int top, int width, int height) => new Rect(left, top, left + width, top + height);
+
+        public override string ToString() => $"({Left}, {Top}, {Right}, {Bottom})";
     }
 }
