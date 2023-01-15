@@ -20,7 +20,7 @@ namespace WMG.Reactions
 
         public static readonly ExitType INSTANCE = new ExitType();
 
-        public override string StoreString(Reaction r)
+        public override string StoreString(Reaction r, ISerializationContext context)
         {
             if (r is ExitReaction)
             {
@@ -29,7 +29,7 @@ namespace WMG.Reactions
             return null;
         }
 
-        public override Reaction LoadString(string str)
+        public override Reaction LoadString(string str, ISerializationContext context)
         {
             if (str == IDENTIFIER)
             {

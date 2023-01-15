@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using WMG.Core;
 using WMG.Gestures;
 
@@ -22,19 +25,19 @@ namespace WMG.Reactions
                     return WinAPI.GetForegroundWindow();
                 case ReactionTarget.WINDOW_AT_GESTURE_START:
                     position = gesture.RawData?.InitialMousePosition();
-                    goto default;
+                    break;
                 case ReactionTarget.WINDOW_AT_POINTER:
                     position = gesture.RawData?.CurrentMousePosition();
-                    goto default;
-                default:
-                    if (position.HasValue)
-                    {
-                        return WinAPI.RootWindowFromPoint(position.Value);
-                    }
-                    else
-                    {
-                        return IntPtr.Zero;
-                    }
+                    break;
+            }
+
+            if (position.HasValue)
+            {
+                return WinAPI.RootWindowFromPoint(position.Value);
+            }
+            else
+            {
+                return IntPtr.Zero;
             }
         }
     }
@@ -72,7 +75,7 @@ namespace WMG.Reactions
 
         public static readonly CloseWindowType INSTANCE = new CloseWindowType();
 
-        public override string StoreString(Reaction r)
+        public override string StoreString(Reaction r, ISerializationContext context)
         {
             if (r is CloseWindowReaction c)
             {
@@ -81,7 +84,7 @@ namespace WMG.Reactions
             return null;
         }
 
-        public override Reaction LoadString(string str)
+        public override Reaction LoadString(string str, ISerializationContext context)
         {
             if (str.StartsWith(IDENTIFIER))
             {
@@ -151,7 +154,7 @@ namespace WMG.Reactions
 
         public static readonly MinimizeWindowType INSTANCE = new MinimizeWindowType();
 
-        public override string StoreString(Reaction r)
+        public override string StoreString(Reaction r, ISerializationContext context)
         {
             if (r is MinimizeWindowReaction m)
             {
@@ -160,13 +163,13 @@ namespace WMG.Reactions
             return null;
         }
 
-        public override Reaction LoadString(string str)
+        public override Reaction LoadString(string str, ISerializationContext context)
         {
             if (str.StartsWith(IDENTIFIER))
             {
                 string remainder = str.Substring(IDENTIFIER.Length);
                 string[] parts = remainder.Split(';');
-                
+
                 if (parts.Length == 2 &&
                     Enum.TryParse<ReactionTarget>(parts[0], out ReactionTarget target) &&
                     bool.TryParse(parts[1], out bool rim))
@@ -210,7 +213,7 @@ namespace WMG.Reactions
 
         public static readonly MaximizeWindowType INSTANCE = new MaximizeWindowType();
 
-        public override string StoreString(Reaction r)
+        public override string StoreString(Reaction r, ISerializationContext context)
         {
             if (r is MaximizeWindowReaction m)
             {
@@ -219,7 +222,7 @@ namespace WMG.Reactions
             return null;
         }
 
-        public override Reaction LoadString(string str)
+        public override Reaction LoadString(string str, ISerializationContext context)
         {
             if (str.StartsWith(IDENTIFIER))
             {
@@ -265,7 +268,7 @@ namespace WMG.Reactions
 
         public static readonly MoveWindowType INSTANCE = new MoveWindowType();
 
-        public override string StoreString(Reaction r)
+        public override string StoreString(Reaction r, ISerializationContext context)
         {
             if (r is MoveWindowReaction m)
             {
@@ -276,9 +279,9 @@ namespace WMG.Reactions
             return null;
         }
 
-        public override Reaction LoadString(string str)
+        public override Reaction LoadString(string str, ISerializationContext context)
         {
-            if(str.StartsWith(IDENTIFIER))
+            if (str.StartsWith(IDENTIFIER))
             {
                 string remainder = str.Substring(IDENTIFIER.Length);
                 string[] parts = remainder.Split(';');
@@ -296,4 +299,5 @@ namespace WMG.Reactions
             return null;
         }
     }
+
 }
