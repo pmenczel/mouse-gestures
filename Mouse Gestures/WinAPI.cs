@@ -60,11 +60,11 @@ namespace WMG.Core
         [StructLayout(LayoutKind.Sequential)]
         public struct MsLLHookStruct
         {
-            Point pt;
-            int mouseData;
-            int flags;
-            int time;
-            UIntPtr dwExtraInfo;
+            public Point pt;
+            public int mouseData;
+            public int flags;
+            public int time;
+            public UIntPtr dwExtraInfo;
         }
 
         /*
@@ -74,13 +74,13 @@ namespace WMG.Core
          * (leaving KbdLLHookStructFlags as uint for simplicity)
          */
         [StructLayout(LayoutKind.Sequential)]
-        public class KbdLLHookStruct
+        public struct KbdLLHookStruct
         {
-            uint vkCode;
-            uint scanCode;
-            uint flags;
-            uint time;
-            UIntPtr dwExtraInfo;
+            public uint vkCode;
+            public uint scanCode;
+            public uint flags;
+            public uint time;
+            public UIntPtr dwExtraInfo;
         }
 
         /*
@@ -342,6 +342,87 @@ namespace WMG.Core
 
         #endregion
 
+        #region Monitor information
+
+        /* 
+         * Used in GetMonitorInfo.
+         */
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+        public struct MONITORINFO
+        {
+            public int Size;
+            public Rect Monitor;
+            public Rect WorkArea;
+            public uint Flags;
+
+            public const uint MONITORINFOF_PRIMARY = 1;
+
+            public void Init()
+            {
+                this.Size = Marshal.SizeOf(typeof(MONITORINFO));
+            }
+        }
+
+        /*
+         * https://www.pinvoke.net/default.aspx/user32/GetMonitorInfo.html
+         * https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getmonitorinfow
+         */
+        [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+        public static extern bool GetMonitorInfo(IntPtr hMonitor, ref MONITORINFO lpmi);
+
+        /*
+         * https://pinvoke.net/default.aspx/user32/EnumDisplayMonitors.html
+         * https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-enumdisplaymonitors
+         */
+        [DllImport("user32.dll")]
+        public static extern bool EnumDisplayMonitors(IntPtr hdc, IntPtr lprcClip, MonitorEnumProc lpfnEnum, IntPtr dwData);
+
+        public delegate bool MonitorEnumProc(IntPtr hMonitor, IntPtr hdcMonitor, ref Rect lprcMonitor, IntPtr dwData);
+
+        // Somewhat more high-level version of the MONITORINFO struct
+        public readonly struct MonitorInformation
+        {
+            // Area filled by a fullscreen window on this monitor
+            public readonly Rect MonitorArea;
+            // Area filled by a maximized window on this monitor
+            public readonly Rect WorkArea;
+            // Whether this is the primary monitor
+            public readonly bool Primary;
+
+            public MonitorInformation(Rect monitorArea, Rect workArea, bool primary)
+            {
+                this.MonitorArea = monitorArea;
+                this.WorkArea = workArea;
+                this.Primary = primary;
+            }
+        }
+
+        /*
+         * Helper method for common task: retrieve information about all available monitors.
+         */
+        public static List<MonitorInformation> ListMonitors()
+        {
+            List<MonitorInformation> result = new List<MonitorInformation>();
+            EnumDisplayMonitors(IntPtr.Zero, IntPtr.Zero,
+                delegate (IntPtr hMonitor, IntPtr hdcMonitor, ref Rect lprcMonitor, IntPtr dwData)
+                {
+                    MONITORINFO info = new MONITORINFO();
+                    info.Init();
+                    bool success = GetMonitorInfo(hMonitor, ref info);
+                    if (success)
+                    {
+                        result.Add(new MonitorInformation(info.Monitor,
+                            info.WorkArea,
+                            (info.Flags & MONITORINFO.MONITORINFOF_PRIMARY) != 0));
+                    }
+                    return true;
+                },
+                IntPtr.Zero);
+            return result;
+        }
+
+        #endregion
+
         #region Other stuff
 
         /*
@@ -380,15 +461,44 @@ namespace WMG.Core
      * https://docs.microsoft.com/en-us/windows/desktop/api/windef/ns-windef-point
      */
     [StructLayout(LayoutKind.Sequential)]
-    public readonly struct Point
+    public readonly struct Point : IEquatable<Point>
     {
         public readonly int x;
         public readonly int y;
+
+        public override bool Equals(object obj)
+        {
+            return obj is Point point && Equals(point);
+        }
+
+        public bool Equals(Point other)
+        {
+            return x == other.x &&
+                   y == other.y;
+        }
+
+        public override int GetHashCode()
+        {
+            int hashCode = 1502939027;
+            hashCode = hashCode * -1521134295 + x.GetHashCode();
+            hashCode = hashCode * -1521134295 + y.GetHashCode();
+            return hashCode;
+        }
 
         public double SquareDistance(Point other) =>
             (x - other.x) * (x - other.x) + (y - other.y) * (y - other.y);
 
         public override string ToString() => $"({x}, {y})";
+
+        public static bool operator ==(Point left, Point right)
+        {
+            return left.Equals(right);
+        }
+
+        public static bool operator !=(Point left, Point right)
+        {
+            return !(left == right);
+        }
     }
 
     /* 
@@ -396,7 +506,7 @@ namespace WMG.Core
      * https://pinvoke.net/default.aspx/Structures/RECT.html
      */
     [StructLayout(LayoutKind.Sequential)]
-    public readonly struct Rect
+    public readonly struct Rect : IEquatable<Rect>
     {
         public readonly int Left, Top, Right, Bottom;
 
@@ -413,6 +523,39 @@ namespace WMG.Core
 
         public static Rect FromDimensions(int left, int top, int width, int height) => new Rect(left, top, left + width, top + height);
 
+        public override bool Equals(object obj)
+        {
+            return obj is Rect rect && Equals(rect);
+        }
+
+        public bool Equals(Rect other)
+        {
+            return Left == other.Left &&
+                   Top == other.Top &&
+                   Right == other.Right &&
+                   Bottom == other.Bottom;
+        }
+
+        public override int GetHashCode()
+        {
+            int hashCode = -1819631549;
+            hashCode = hashCode * -1521134295 + Left.GetHashCode();
+            hashCode = hashCode * -1521134295 + Top.GetHashCode();
+            hashCode = hashCode * -1521134295 + Right.GetHashCode();
+            hashCode = hashCode * -1521134295 + Bottom.GetHashCode();
+            return hashCode;
+        }
+
         public override string ToString() => $"({Left}, {Top}, {Right}, {Bottom})";
+
+        public static bool operator ==(Rect left, Rect right)
+        {
+            return left.Equals(right);
+        }
+
+        public static bool operator !=(Rect left, Rect right)
+        {
+            return !(left == right);
+        }
     }
 }

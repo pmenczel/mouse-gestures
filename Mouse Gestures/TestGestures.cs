@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text.Json;
 using System.Windows.Forms;
 using WMG.Core;
 using WMG.Gestures;
@@ -31,6 +32,50 @@ namespace WMG
             GESTURES.Add(
                 new Gesture(Modifiers.NONE, new WMG.Gestures.WMGAction[] { new MouseMovementAction(Direction.LEFT) }),
                 new MoveWindowReaction(ReactionTarget.WINDOW_AT_GESTURE_START, Rect.FromDimensions(100, 100, 600, 400)));
+
+            double QUARTER = 0.25;
+            double THIRD = 1.0 / 3.0;
+            double HALF = 0.5;
+            Layout l1 = new Layout
+            {
+                Name = "Layout 1",
+                Dimensions = {
+                    new WindowDimensions(0, 0.0, 0.0, THIRD, 1.0),
+                    new WindowDimensions(0, THIRD, 0.0, THIRD, 1.0),
+                    new WindowDimensions(0, 2*THIRD, 0.0, THIRD, 1.0),
+                    new WindowDimensions(1, 0.0, 0.0, 1.0, 1.0) }
+            };
+            Layout l2 = new Layout
+            {
+                Name = "Layout 2",
+                Dimensions = {
+                    new WindowDimensions(0, 0.0, 0.0, QUARTER, 1.0),
+                    new WindowDimensions(0, QUARTER, 0.0, HALF, 1.0),
+                    new WindowDimensions(0, 3*QUARTER, 0.0, QUARTER, 1.0),
+                    new WindowDimensions(1, 0.0, 0.0, 1.0, 1.0) }
+            };
+            Layout l3 = new Layout
+            {
+                Name = "Layout 3",
+                Dimensions = {
+                    new WindowDimensions(0, 0.0, 0.0, HALF, 0.0),
+                    new WindowDimensions(0, HALF, 0.0, HALF, 0.0),
+                    new WindowDimensions(1, 0.0, 0.0, HALF, 0.0),
+                    new WindowDimensions(1, HALF, 0.0, HALF, 0.0) }
+            };
+            LayoutManager man = new LayoutManager
+            {
+                Fullscreen = false,
+                Layouts = { l1, l2, l3 }
+            };
+
+            var options = new JsonSerializerOptions { WriteIndented = true };
+            string test = JsonSerializer.Serialize(man, options);
+            Console.WriteLine(test);
+            Console.WriteLine();
+
+            var test2 = JsonSerializer.Deserialize<LayoutManager>(test);
+            Console.WriteLine(JsonSerializer.Serialize(test2, options));
         }
 
         public static void Main(string[] args)
