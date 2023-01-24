@@ -20,13 +20,10 @@ namespace WMG.Gestures
     {
         public Modifiers InitialModifiers { get; }
         public IEnumerable<WMGAction> Actions { get; }
-        public UnfinishedGesture RawData { get; }
+        public UnfinishedGesture? RawData { get; }
 
-        public Gesture(Modifiers initialModifiers, IEnumerable<WMGAction> actions, UnfinishedGesture rawData)
+        public Gesture(Modifiers initialModifiers, IEnumerable<WMGAction> actions, UnfinishedGesture? rawData)
         {
-            if (initialModifiers == null || actions == null)
-                throw new ArgumentNullException();
-            
             InitialModifiers = initialModifiers;
             Actions = actions;
             RawData = rawData;
@@ -64,25 +61,25 @@ namespace WMG.Gestures
             return result;
         }
 
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             return Equals(obj as Gesture);
         }
 
-        public bool Equals(Gesture other)
+        public bool Equals(Gesture? other)
         {
             return other != null && InitialModifiers.Equals(other.InitialModifiers) && Actions.SequenceEqual(other.Actions);
         }
 
         public override int GetHashCode()
         {
-            int hashCode = 1316417471;
-            hashCode = hashCode * -1521134295 + InitialModifiers.GetHashCode();
+            HashCode hash = new();
+            hash.Add(InitialModifiers);
             foreach (WMGAction a in Actions)
             {
-                hashCode = hashCode * -1521134295 + EqualityComparer<WMGAction>.Default.GetHashCode(a);
+                hash.Add(EqualityComparer<WMGAction>.Default.GetHashCode(a));
             }
-            return hashCode;
+            return hash.ToHashCode();
         }
     }
 }

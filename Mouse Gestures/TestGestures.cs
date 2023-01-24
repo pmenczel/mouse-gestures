@@ -10,7 +10,7 @@ namespace WMG
 {
     public class TestGestures : ApplicationContext
     {
-        private static readonly Dictionary<Gesture, Reaction> GESTURES = new Dictionary<Gesture, Reaction>();
+        private static readonly Dictionary<Gesture, Reaction> GESTURES = new();
 
         static TestGestures()
         {
@@ -36,37 +36,26 @@ namespace WMG
             double QUARTER = 0.25;
             double THIRD = 1.0 / 3.0;
             double HALF = 0.5;
-            Layout l1 = new Layout
-            {
-                Name = "Layout 1",
-                Dimensions = {
+            Layout l1 = new("Layout 1", new() {
                     new WindowDimensions(0, 0.0, 0.0, THIRD, 1.0),
                     new WindowDimensions(0, THIRD, 0.0, THIRD, 1.0),
                     new WindowDimensions(0, 2*THIRD, 0.0, THIRD, 1.0),
-                    new WindowDimensions(1, 0.0, 0.0, 1.0, 1.0) }
-            };
-            Layout l2 = new Layout
-            {
-                Name = "Layout 2",
-                Dimensions = {
+                    new WindowDimensions(1, 0.0, 0.0, 1.0, 1.0) });
+            Layout l2 = new("Layout 2", new() {
                     new WindowDimensions(0, 0.0, 0.0, QUARTER, 1.0),
                     new WindowDimensions(0, QUARTER, 0.0, HALF, 1.0),
                     new WindowDimensions(0, 3*QUARTER, 0.0, QUARTER, 1.0),
-                    new WindowDimensions(1, 0.0, 0.0, 1.0, 1.0) }
-            };
-            Layout l3 = new Layout
-            {
-                Name = "Layout 3",
-                Dimensions = {
+                    new WindowDimensions(1, 0.0, 0.0, 1.0, 1.0) });
+            Layout l3 = new("Layout 3", new() {
                     new WindowDimensions(0, 0.0, 0.0, HALF, 0.0),
                     new WindowDimensions(0, HALF, 0.0, HALF, 0.0),
                     new WindowDimensions(1, 0.0, 0.0, HALF, 0.0),
-                    new WindowDimensions(1, HALF, 0.0, HALF, 0.0) }
-            };
-            LayoutManager man = new LayoutManager
+                    new WindowDimensions(1, HALF, 0.0, HALF, 0.0) });
+            LayoutManager man = new()
             {
                 Fullscreen = false,
-                Layouts = { l1, l2, l3 }
+                Layouts = { l1, l2, l3 },
+                ActiveLayoutIndex = 0
             };
 
             var options = new JsonSerializerOptions { WriteIndented = true };
@@ -78,7 +67,7 @@ namespace WMG
             Console.WriteLine(JsonSerializer.Serialize(test2, options));
         }
 
-        public static void Main(string[] args)
+        public static void Main(string[] _)
         {
             var analyzer = new GestureAnalyzer(Settings.WiggleRoomSq);
 
@@ -87,14 +76,14 @@ namespace WMG
             analyzer.OnClickThrough += (_ => Console.WriteLine("Click-Through\n"));
 
             var hook = new NativeInterface(analyzer);
-            TestGestures app = new TestGestures();
+            TestGestures app = new();
             var context = new TestContext(hook, app);
 
             analyzer.OnGestureComplete += gesture =>
             {
-                if (GESTURES.ContainsKey(gesture))
+                if (GESTURES.TryGetValue(gesture, out Reaction? value))
                 {
-                    GESTURES[gesture].Perform(gesture, context);
+                    value.Perform(gesture, context);
                 }
             };
 
@@ -104,8 +93,8 @@ namespace WMG
 
     public class TestContext : IContext
     {
-        private NativeInterface hook;
-        private ApplicationContext app;
+        private readonly NativeInterface hook;
+        private readonly ApplicationContext app;
 
         public TestContext(NativeInterface hook, ApplicationContext app)
         {
@@ -121,7 +110,7 @@ namespace WMG
 
         private class ReactivateHookOnDispose : IDisposable
         {
-            private NativeInterface hook;
+            private readonly NativeInterface hook;
 
             public ReactivateHookOnDispose(NativeInterface hook)
             {

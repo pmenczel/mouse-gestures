@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using WMG.Core;
 
 namespace WMG.Gestures
@@ -44,7 +45,7 @@ namespace WMG.Gestures
         // this is the squared wiggle room
         public int WiggleRoomSq { get; set; }
 
-        public UnfinishedGesture CurrentGesture { get; private set; } = null;
+        public UnfinishedGesture? CurrentGesture { get; private set; } = null;
 
         // wiggleRoomSq is the squared wiggle room
         public GestureAnalyzer(int wiggleRoomSq)
@@ -52,47 +53,34 @@ namespace WMG.Gestures
             WiggleRoomSq = wiggleRoomSq;
         }
 
-        public event UnfinishedGestureHandler OnGestureStart;
-        public event UnfinishedGestureHandler OnGestureUpdate;
-        public event GestureHandler OnGestureComplete;
-        public event ClickThroughHandler OnClickThrough;
+        public event UnfinishedGestureHandler? OnGestureStart;
+        public event UnfinishedGestureHandler? OnGestureUpdate;
+        public event GestureHandler? OnGestureComplete;
+        public event ClickThroughHandler? OnClickThrough;
 
         private void RaiseGestureStart(UnfinishedGesture arg)
         {
-            if (OnGestureStart == null) return;
-            foreach (UnfinishedGestureHandler x in OnGestureStart.GetInvocationList())
-            {
-                // we ignore exceptions thrown by the clients (i.e., they end up in the uncaught-exception-handler)
-                x.BeginInvoke(arg, x.EndInvoke, null);
-            }
+            if (OnGestureStart is not null)
+                Task.Run(() => OnGestureStart(arg));
         }
 
-        // the following three methods are basically copies of RaiseGestureStart, but not sure if it is possible to abstract away
-        private void RaiseGestureUpdate(UnfinishedGesture arg)
+        private void RaiseGestureUpdate(UnfinishedGesture? arg)
         {
-            if (OnGestureUpdate == null) return;
-            foreach (UnfinishedGestureHandler x in OnGestureUpdate.GetInvocationList())
-            {
-                x.BeginInvoke(arg, x.EndInvoke, null);
-            }
+            if (OnGestureUpdate is not null)
+                Task.Run(() => OnGestureUpdate(arg));
         }
 
-        private void RaiseGestureComplete(Gesture arg)
-        {
-            if (OnGestureComplete == null) return;
-            foreach (GestureHandler x in OnGestureComplete.GetInvocationList())
-            {
-                x.BeginInvoke(arg, x.EndInvoke, null);
-            }
-        }
-        
         private void RaiseClickThrough(Point arg)
         {
-            if (OnClickThrough == null) return;
-            foreach (ClickThroughHandler x in OnClickThrough.GetInvocationList())
-            {
-                x.BeginInvoke(arg, x.EndInvoke, null);
-            }
+            if (OnClickThrough is not null)
+                Task.Run(() => OnClickThrough(arg));
+        }
+
+        private void RaiseGestureComplete(Gesture arg, Action<Gesture>? cleanup)
+        {
+            cleanup?.Invoke(arg);
+            if (OnGestureComplete is not null)
+                Task.Run(() => OnGestureComplete(arg));
         }
 
         /*
@@ -116,7 +104,7 @@ namespace WMG.Gestures
          * Returns: whether this event is part of a gesture.
          * Note that this will return true in the case of a click-through, for consistency with the previous RmbDown event.
          */
-        public bool RmbUp(Point position, Action<Gesture> cleanup)
+        public bool RmbUp(Point position, Action<Gesture>? cleanup)
         {
             if (CurrentGesture == null)
                 return false;
@@ -129,7 +117,7 @@ namespace WMG.Gestures
             else
             {
                 var gesture = CurrentGesture.Complete(position);
-                new Thread(() => { cleanup?.Invoke(gesture); RaiseGestureComplete(gesture); }).Start();
+                RaiseGestureComplete(gesture, cleanup);
             }
             CurrentGesture = null;
             return true;
@@ -137,7 +125,7 @@ namespace WMG.Gestures
 
         public void Reset()
         {
-            if (CurrentGesture != null)
+            if (CurrentGesture is not null)
             {
                 CurrentGesture = null;
                 RaiseGestureUpdate(null);
@@ -154,15 +142,15 @@ namespace WMG.Gestures
                 return false;
 
             // If it's the same point again, ignore (important for click-through detection)
-            if (newPosition.Equals(CurrentGesture.CurrentMousePosition()))
+            if (newPosition.Equals(CurrentGesture.CurrentMousePosition))
                 return false;
 
             // First of all, record the movement
             CurrentGesture.RecordMovement(newPosition);
 
             // --- implement the algorithm outlined at the top ---
-            AnnotatedAction latestAction = CurrentGesture.LatestAction();
-            if (!(latestAction?.Action is MouseMovementAction)) // no action yet, mouse wheel action or modifier change action
+            AnnotatedAction? latestAction = CurrentGesture.LatestAction;
+            if (latestAction?.Action is not MouseMovementAction) // no action yet, mouse wheel action or modifier change action
             {
                 // Compare the current mouse position to the starting point of the latest action
                 // (or to the starting point of the gesture, if there is no action yet)
@@ -171,7 +159,7 @@ namespace WMG.Gestures
                 var movementDirection = DetermineDirection(startingPosition, newPosition);
                 // If the movement direction is null, we haven't left the wiggle room yet.
                 // Otherwise, this is a new mouse movement action!
-                if (movementDirection != null)
+                if (movementDirection is not null)
                 {
                     var newAction = new MouseMovementAction(movementDirection.Value);
                     CurrentGesture.RecordAction(newAction, startingPosition);
@@ -180,12 +168,12 @@ namespace WMG.Gestures
             }
             else // i.e., latest action was mouse movement
             {
-                var previousDirection = (latestAction.Action as MouseMovementAction).direction;
+                var previousDirection = (latestAction.Action as MouseMovementAction)!.MovementDirection;
                 // To determine the current direction, we go back in the recorded movement data until we find a point at least (wiggle room) away from the current position and compare that point to the current position.
                 try
                 {
-                    var earlierPosition = CurrentGesture.MovementData.Last(point => point.SquareDistance(newPosition) >= WiggleRoomSq);
-                    var currentDirection = DetermineDirection(earlierPosition, newPosition).Value;
+                    var earlierPosition = CurrentGesture.MovementData.Last(point => DetermineDirection(point, newPosition) is not null);
+                    var currentDirection = DetermineDirection(earlierPosition, newPosition)!.Value;
 
                     // If the current direction and the previous direction differ, this is a new action. The initial mouse position of the new action is the "earlier position".
                     if (currentDirection != previousDirection)
@@ -214,7 +202,7 @@ namespace WMG.Gestures
         {
             if (CurrentGesture == null)
                 return false;
-            if (CurrentGesture.CurrentModifiers().Equals(newModifiers))
+            if (CurrentGesture.CurrentModifiers.Equals(newModifiers))
                 return false;
 
             var newAction = new ModifierChangeAction(newModifiers);
@@ -233,7 +221,7 @@ namespace WMG.Gestures
             if (CurrentGesture == null)
                 return false;
             else
-                return ModifiersUpdate(CurrentGesture.CurrentModifiers() + pressedModifiers);
+                return ModifiersUpdate(CurrentGesture.CurrentModifiers + pressedModifiers);
         }
 
         /*
@@ -245,7 +233,7 @@ namespace WMG.Gestures
             if (CurrentGesture == null)
                 return false;
             else
-                return ModifiersUpdate(CurrentGesture.CurrentModifiers() - releasedModifiers);
+                return ModifiersUpdate(CurrentGesture.CurrentModifiers - releasedModifiers);
         }
 
         /*
@@ -274,13 +262,13 @@ namespace WMG.Gestures
             {
                 return null;
             }
-            else if (Math.Abs(p2.x - p1.x) >= Math.Abs(p2.y - p1.y))
+            else if (Math.Abs(p2.X - p1.X) >= Math.Abs(p2.Y - p1.Y))
             {
-                return p2.x > p1.x ? Direction.RIGHT : Direction.LEFT;
+                return p2.X > p1.X ? Direction.RIGHT : Direction.LEFT;
             }
             else
             {
-                return p2.y > p1.y ? Direction.DOWN : Direction.UP;
+                return p2.Y > p1.Y ? Direction.DOWN : Direction.UP;
             }
         }
     }

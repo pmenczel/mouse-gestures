@@ -17,7 +17,7 @@ namespace WMG.Reactions
 
         public abstract void Perform(Gesture gesture, IContext context);
 
-        public static Reaction FromString(string str, ISerializationContext context)
+        public static Reaction? FromString(string str, ISerializationContext context)
         {
             foreach (ReactionType t in ReactionType.KNOWN_TYPES)
             {
@@ -62,15 +62,15 @@ namespace WMG.Reactions
          * The string should include an identifier for the type of reaction (i.e., for the child class).
          * Returns null if the given Reaction is not of the right type.
          */
-        public abstract string StoreString(Reaction r, ISerializationContext context);
+        public abstract string? StoreString(Reaction r, ISerializationContext context);
 
         /*
          * Reconstructs the Reaction from the given string.
          * Returns null if the string is not of the right type, i.e., does not contain the correct identifier.
          */
-        public abstract Reaction LoadString(string str, ISerializationContext context);
+        public abstract Reaction? LoadString(string str, ISerializationContext context);
 
-        internal static readonly List<ReactionType> KNOWN_TYPES = new List<ReactionType>
+        internal static readonly List<ReactionType> KNOWN_TYPES = new()
         {
             ExitType.INSTANCE,
             CloseWindowType.INSTANCE,

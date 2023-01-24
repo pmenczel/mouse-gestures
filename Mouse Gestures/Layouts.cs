@@ -1,23 +1,29 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Text.Json.Serialization;
 using WMG.Core;
 
 namespace WMG.Reactions
 {
-    public struct WindowDimensions
+    public readonly record struct WindowDimensions
     {
-        [JsonInclude]
-        public byte MonitorID;
+        public byte MonitorID { get; init; }
 
         // If this is false -> X, Y, Width, Height are relevant. They are absolute coordinates on the screen of the given monitor
         // If this is true -> Rx, Ry, Rwidth, Rheight are relevant. They are relative coordinates, i.e., percentage values 0 <= p <= 1, on the screen of the given monitor
-        [JsonInclude]
-        public bool RelativeCoordinates;
+        public bool RelativeCoordinates { get; init; }
 
-        [JsonInclude]
-        public int X, Y, Width, Height;
-        [JsonInclude]
-        public double Rx, Ry, Rwidth, Rheight;
+        public int X { get; init; }
+        public int Y { get; init; }
+        public int Width { get; init; }
+        public int Height { get; init; }
+
+        public double Rx { get; init; }
+        public double Ry { get; init; }
+        public double Rwidth { get; init; }
+        public double Rheight { get; init; }
+
+        public WindowDimensions() { }
 
         public WindowDimensions(byte monitorID, int x, int y, int width, int height)
         {
@@ -27,11 +33,6 @@ namespace WMG.Reactions
             this.Y = y;
             this.Width = width;
             this.Height = height;
-
-            this.Rx = 0;
-            this.Ry = 0;
-            this.Rwidth = 0;
-            this.Rheight = 0;
         }
 
         public WindowDimensions(byte monitorID, double rx, double ry, double rwidth, double rheight)
@@ -42,14 +43,9 @@ namespace WMG.Reactions
             this.Ry = ry;
             this.Rwidth = rwidth;
             this.Rheight = rheight;
-
-            this.X = 0;
-            this.Y = 0;
-            this.Width = 0;
-            this.Height = 0;
         }
 
-        public Rect? ConvertToVirtualScreenCoords(List<WinAPI.MonitorInformation> monitorList, bool fullscreen = false)
+        internal Rect? ConvertToVirtualScreenCoords(MonitorList monitorList, bool fullscreen = false)
         {
             if (monitorList.Count <= MonitorID)
             {
@@ -74,51 +70,49 @@ namespace WMG.Reactions
         }
     }
 
-    public class Layout
-    {
-        public string Name { get; set; }
-
-        public List<WindowDimensions> Dimensions { get; set; } = new List<WindowDimensions>();
-    }
+    public record Layout(string Name, List<WindowDimensions> Dimensions);
 
     public class LayoutManager
     {
-        // TODO make private, add methods to this class?
         [JsonInclude]
-        public readonly List<Layout> Layouts = new List<Layout>();
+        public List<Layout> Layouts { get; } = new();
+
+        [JsonInclude]
         public bool Fullscreen { get; set; } = false;
 
-        [JsonConstructor]
-        public LayoutManager(List<Layout> layouts, bool fullscreen)
-        {
-            Layouts = layouts;
-            Fullscreen = fullscreen;
-        }
+        [JsonInclude]
+        public int ActiveLayoutIndex { get; set; } = 0;
 
         public LayoutManager() { }
 
-        private int activeLayoutIndex = 0;
-        [JsonIgnore]
-        public int ActiveLayoutIndex
+        [JsonConstructor]
+        public LayoutManager(List<Layout> layouts, bool fullscreen, int activeLayoutIndex)
         {
-            get => activeLayoutIndex;
-            set
-            {
-                if (value >= 0 && value < Layouts.Count)
-                {
-                    activeLayoutIndex = value;
-                }
-            }
+            Layouts.AddRange(layouts);
+            Fullscreen = fullscreen;
+            ActiveLayoutIndex = activeLayoutIndex;
         }
 
         [JsonIgnore]
-        public Layout CurrentLayout => Layouts[ActiveLayoutIndex];
+        public Layout? ActiveLayout
+        {
+            get
+            {
+                if (ActiveLayoutIndex >= 0 && ActiveLayoutIndex < Layouts.Count)
+                    return Layouts[ActiveLayoutIndex];
+                else
+                    return null;
+            }
+        }
 
         public Rect? LayoutWindow(Rect? currentDimensions, LayoutAction action)
         {
-            List<WinAPI.MonitorInformation> monitorList = WinAPI.ListMonitors();
-            int? currentPosition = positionInCurrentLayout(currentDimensions, monitorList);
-            if (currentPosition == null)
+            if (ActiveLayout is null || ActiveLayout.Dimensions.Count == 0)
+                return null;
+
+            MonitorList monitorList = WinAPI.ListMonitors();
+            int? currentPosition = PositionInCurrentLayout(currentDimensions, monitorList);
+            if (currentPosition is null)
             {
                 if (action == LayoutAction.PREVIOUS)
                     action = LayoutAction.FIRST;
@@ -133,33 +127,31 @@ namespace WMG.Reactions
                     targetPosition = 0;
                     break;
                 case LayoutAction.LAST:
-                    targetPosition = CurrentLayout.Dimensions.Count - 1;
+                    targetPosition = ActiveLayout.Dimensions.Count - 1;
                     break;
                 case LayoutAction.NEXT:
-                    targetPosition = (int)currentPosition + 1;
+                    targetPosition = (int)currentPosition! + 1;
+                    if (targetPosition >= ActiveLayout.Dimensions.Count)
+                        targetPosition -= ActiveLayout.Dimensions.Count;
                     break;
                 case LayoutAction.PREVIOUS:
-                    targetPosition = (int)currentPosition - 1;
+                    targetPosition = (int)currentPosition! - 1;
+                    if (targetPosition < 0)
+                        targetPosition += ActiveLayout.Dimensions.Count;
                     break;
             }
-            if (targetPosition < 0)
-                targetPosition += CurrentLayout.Dimensions.Count;
-            else if (targetPosition >= CurrentLayout.Dimensions.Count)
-                targetPosition -= CurrentLayout.Dimensions.Count;
-
-            return CurrentLayout.Dimensions[targetPosition].ConvertToVirtualScreenCoords(monitorList, Fullscreen);
+            return ActiveLayout.Dimensions[targetPosition].ConvertToVirtualScreenCoords(monitorList, Fullscreen);
         }
 
-        private int? positionInCurrentLayout(Rect? dimensions, List<WinAPI.MonitorInformation> monitorList)
+        private int? PositionInCurrentLayout(Rect? dimensions, MonitorList monitorList)
         {
-            for (int i = 0; i < CurrentLayout.Dimensions.Count; i++)
+            if (dimensions is null || ActiveLayout is null)
+                return null;
+
+            for (int i = 0; i < ActiveLayout.Dimensions.Count; i++)
             {
-                if (dimensions is Rect currentDim &&
-                    CurrentLayout.Dimensions[i].ConvertToVirtualScreenCoords(monitorList, Fullscreen) is Rect layoutDim &&
-                    currentDim == layoutDim)
-                {
+                if (ActiveLayout.Dimensions[i].ConvertToVirtualScreenCoords(monitorList, Fullscreen) is Rect layoutDim && dimensions == layoutDim)
                     return i;
-                }
             }
             return null;
         }

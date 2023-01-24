@@ -7,7 +7,7 @@ namespace WMG.Gestures
      * There are three types of Action: mouse movements, mouse wheel movements and changes of modifier keys.
      * The former two are specified by a direction (up, down, left or right), the latter is specified by the new set of pressed modifier keys (shift, control, alt, left mouse button).
      */
-    public abstract class WMGAction // named "WMGAction" instead of just "Action" because of System.Action
+    public abstract record WMGAction // named "WMGAction" instead of just "Action" because of System.Action
     {
         /* Do not allow for additional child classes. */
         internal WMGAction() { }
@@ -19,116 +19,56 @@ namespace WMG.Gestures
 
         public static WMGAction FromString(string str)
         {
-            switch (str)
+            return str switch
             {
-                case "UP": return new MouseMovementAction(Direction.UP);
-                case "DOWN": return new MouseMovementAction(Direction.DOWN);
-                case "LEFT": return new MouseMovementAction(Direction.LEFT);
-                case "RIGHT": return new MouseMovementAction(Direction.RIGHT);
-
-                case "WHEEL UP": return new MouseWheelAction(Direction.UP);
-                case "WHEEL DOWN": return new MouseWheelAction(Direction.DOWN);
-                case "WHEEL LEFT": return new MouseWheelAction(Direction.LEFT);
-                case "WHEEL RIGHT": return new MouseWheelAction(Direction.RIGHT);
-
-                default: return new ModifierChangeAction(Modifiers.FromString(str));
-            }
+                "UP" => new MouseMovementAction(Direction.UP),
+                "DOWN" => new MouseMovementAction(Direction.DOWN),
+                "LEFT" => new MouseMovementAction(Direction.LEFT),
+                "RIGHT" => new MouseMovementAction(Direction.RIGHT),
+                "WHEEL UP" => new MouseWheelAction(Direction.UP),
+                "WHEEL DOWN" => new MouseWheelAction(Direction.DOWN),
+                "WHEEL LEFT" => new MouseWheelAction(Direction.LEFT),
+                "WHEEL RIGHT" => new MouseWheelAction(Direction.RIGHT),
+                _ => new ModifierChangeAction(Modifiers.FromString(str)),
+            };
         }
     }
 
-    public sealed class MouseMovementAction : WMGAction, IEquatable<MouseMovementAction>
+    public sealed record MouseMovementAction(Direction MovementDirection) : WMGAction
     {
-        public readonly Direction direction;
-
-        public MouseMovementAction(Direction direction)
-        {
-            this.direction = direction;
-        }
-
         public override string ToString()
         {
-            switch (direction)
+            return MovementDirection switch
             {
-                case Direction.UP: return "UP";
-                case Direction.DOWN: return "DOWN";
-                case Direction.LEFT: return "LEFT";
-                case Direction.RIGHT: return "RIGHT";
-                default: return "";
-            }
+                Direction.UP => "UP",
+                Direction.DOWN => "DOWN",
+                Direction.LEFT => "LEFT",
+                Direction.RIGHT => "RIGHT",
+                _ => "",
+            };
         }
-
-        // --- generated code ---
-
-        public override bool Equals(object obj) => Equals(obj as MouseMovementAction);
-
-        public bool Equals(MouseMovementAction other)
-        {
-            return other != null && direction == other.direction;
-        }
-
-        public override int GetHashCode() => -1006820870 + direction.GetHashCode();
     }
 
-    public sealed class MouseWheelAction : WMGAction, IEquatable<MouseWheelAction>
+    public sealed record MouseWheelAction(Direction WheelDirection) : WMGAction
     {
-        public readonly Direction direction;
-
-        public MouseWheelAction(Direction direction)
-        {
-            this.direction = direction;
-        }
-
         public override string ToString()
         {
-            switch (direction)
+            return WheelDirection switch
             {
-                case Direction.UP: return "WHEEL UP";
-                case Direction.DOWN: return "WHEEL DOWN";
-                case Direction.LEFT: return "WHEEL LEFT";
-                case Direction.RIGHT: return "WHEEL RIGHT";
-                default: return "";
-            }
+                Direction.UP => "WHEEL UP",
+                Direction.DOWN => "WHEEL DOWN",
+                Direction.LEFT => "WHEEL LEFT",
+                Direction.RIGHT => "WHEEL RIGHT",
+                _ => "",
+            };
         }
-
-        // --- generated code ---
-
-        public override bool Equals(object obj) => Equals(obj as MouseWheelAction);
-
-        public bool Equals(MouseWheelAction other)
-        {
-            return other != null && direction == other.direction;
-        }
-
-        public override int GetHashCode() => -1006820870 + direction.GetHashCode();
     }
 
-    public sealed class ModifierChangeAction : WMGAction, IEquatable<ModifierChangeAction>
+    public sealed record ModifierChangeAction(Modifiers NewModifiers) : WMGAction
     {
-        public readonly Modifiers newModifiers;
-
-        public ModifierChangeAction(Modifiers newModifiers)
+        public override string ToString()
         {
-            this.newModifiers = newModifiers;
-        }
-
-        public override string ToString() => newModifiers.ToString();
-
-        // --- generated code ---
-
-        public override bool Equals(object obj)
-        {
-            return Equals(obj as ModifierChangeAction);
-        }
-
-        public bool Equals(ModifierChangeAction other)
-        {
-            return other != null &&
-                   EqualityComparer<Modifiers>.Default.Equals(newModifiers, other.newModifiers);
-        }
-
-        public override int GetHashCode()
-        {
-            return 578441165 + EqualityComparer<Modifiers>.Default.GetHashCode(newModifiers);
+            return NewModifiers.ToString();
         }
     }
 

@@ -16,25 +16,13 @@ namespace WMG.Gestures
         public bool Alt { get; private set; } = false;
         public bool Lmb { get; private set; } = false;
 
-        public static readonly Modifiers NONE = new Modifiers();
-        public static readonly Modifiers SHIFT = new Modifiers()
-        {
-            Shift = true
-        };
-        public static readonly Modifiers CONTROL = new Modifiers()
-        {
-            Control = true
-        };
-        public static readonly Modifiers ALT = new Modifiers()
-        {
-            Alt = true
-        };
-        public static readonly Modifiers LMB = new Modifiers()
-        {
-            Lmb = true
-        };
+        public static readonly Modifiers NONE = new();
+        public static readonly Modifiers SHIFT = new() { Shift = true };
+        public static readonly Modifiers CONTROL = new() { Control = true };
+        public static readonly Modifiers ALT = new() { Alt = true };
+        public static readonly Modifiers LMB = new() { Lmb = true };
 
-        public static Modifiers operator +(Modifiers m1, Modifiers m2) => new Modifiers()
+        public static Modifiers operator +(Modifiers m1, Modifiers m2) => new()
         {
             Shift = m1.Shift || m2.Shift,
             Control = m1.Control || m2.Control,
@@ -42,7 +30,7 @@ namespace WMG.Gestures
             Lmb = m1.Lmb || m2.Lmb
         };
 
-        public static Modifiers operator -(Modifiers m1, Modifiers m2) => new Modifiers()
+        public static Modifiers operator -(Modifiers m1, Modifiers m2) => new()
         {
             Shift = m1.Shift && !m2.Shift,
             Control = m1.Control && !m2.Control,
@@ -82,12 +70,12 @@ namespace WMG.Gestures
 
         // --- generated code ---
 
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             return Equals(obj as Modifiers);
         }
 
-        public bool Equals(Modifiers other)
+        public bool Equals(Modifiers? other)
         {
             return other != null &&
                    Shift == other.Shift &&
@@ -98,12 +86,7 @@ namespace WMG.Gestures
 
         public override int GetHashCode()
         {
-            int hashCode = 2090988377;
-            hashCode = hashCode * -1521134295 + Shift.GetHashCode();
-            hashCode = hashCode * -1521134295 + Control.GetHashCode();
-            hashCode = hashCode * -1521134295 + Alt.GetHashCode();
-            hashCode = hashCode * -1521134295 + Lmb.GetHashCode();
-            return hashCode;
+            return HashCode.Combine(Shift, Control, Alt, Lmb);
         }
     }
 }

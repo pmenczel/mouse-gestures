@@ -50,7 +50,7 @@ namespace WMG.Core
             analyzer.Reset();
 
             // retrieve module handle of our process, which is required for low level hooks
-            ProcessModule currentModule = Process.GetCurrentProcess().MainModule;
+            ProcessModule currentModule = Process.GetCurrentProcess().MainModule ?? throw new HookException();
             IntPtr moduleHandle = WinAPI.GetModuleHandle(currentModule.ModuleName);
 
             if (mouseHook == IntPtr.Zero) // Try setting the mouse hook
@@ -83,22 +83,24 @@ namespace WMG.Core
         {
             analyzer.Reset();
 
-            Exception ex = null; // we only throw possible exceptions after trying to uninstall both hooks
+            Exception? ex1 = null, ex2 = null; // we only throw possible exceptions after trying to uninstall both hooks
             if (mouseHook != IntPtr.Zero)
             {
                 bool success = WinAPI.UnhookWindowsHookEx(mouseHook);
-                if (!success) ex = new HookException();
+                if (!success) ex1 = new HookException();
             }
             mouseHook = IntPtr.Zero;
 
             if (keyHook != IntPtr.Zero)
             {
                 bool success = WinAPI.UnhookWindowsHookEx(keyHook);
-                if (!success) ex = new HookException();
+                if (!success) ex2 = new HookException();
             }
             keyHook = IntPtr.Zero;
 
-            if (ex != null) throw ex;
+            if (ex1 is not null && ex2 is not null) throw new AggregateException(ex1, ex2);
+            if (ex1 is not null) throw ex1;
+            if (ex2 is not null) throw ex2;
         }
 
         /*
@@ -209,6 +211,7 @@ namespace WMG.Core
                 return WinAPI.CallNextHookEx(keyHook, nCode, wParam, lParam);
         }
 
+#pragma warning disable CA1822, IDE0060
         /*
          * Determines whether a gesture can be started right now by a right mouse click at the specified location.
          * TODO: the idea is that we should not register mouse gestures in applications such as Opera, which use mouse gestures themselves
@@ -217,36 +220,27 @@ namespace WMG.Core
         {
             return true;
         }
+#pragma warning restore CA1822, IDE0060
 
         // Helper method for KeyHookProc
-        private Modifiers KeysToModifiers(Keys keys)
+        private static Modifiers KeysToModifiers(Keys keys)
         {
-            switch (keys)
+            return keys switch
             {
-                case Keys.LShiftKey:
-                case Keys.RShiftKey:
-                case Keys.ShiftKey:         // still don't understand 100% when this is used, and when LShiftKey / RShiftKey are used.
-                    return Modifiers.SHIFT; // let's just be on the safe side and check for all possibilities
-                case Keys.LControlKey:
-                case Keys.RControlKey:
-                case Keys.ControlKey:
-                    return Modifiers.CONTROL;
-                case Keys.LMenu:
-                case Keys.RMenu:
-                case Keys.Menu:
-                    return Modifiers.ALT;
-                case Keys.LButton: // not going to happen if we come from KeyHookProc, but let's include it anyways
-                    return Modifiers.LMB;
-                default:
-                    return Modifiers.NONE;
-            }
+                // let's just be on the safe side and check for all possibilities
+                Keys.LShiftKey or Keys.RShiftKey or Keys.ShiftKey => Modifiers.SHIFT,
+                Keys.LControlKey or Keys.RControlKey or Keys.ControlKey => Modifiers.CONTROL,
+                Keys.LMenu or Keys.RMenu or Keys.Menu => Modifiers.ALT,
+                Keys.LButton => Modifiers.LMB, // not going to happen if we come from KeyHookProc, but let's include it anyways
+                _ => Modifiers.NONE,
+            };
         }
 
         /*
          * Helper method to find out which modifier keys (shift, ctrl, alt, lmb) are currently pressed.
          * Note that this might not work properly any more as soon as low level events have been consumed.
          */
-        private Modifiers CurrentlyPressedModifiers()
+        private static Modifiers CurrentlyPressedModifiers()
         {
             Modifiers result = Modifiers.NONE;
             if (WinAPI.GetKeyState(Keys.ShiftKey) < 0) // GetKeyState sets the high-order bit, i.e. the sign bit, if the key is pressed
@@ -272,7 +266,7 @@ namespace WMG.Core
             var lastModifierChange = gesture.Actions.Where(a => a is ModifierChangeAction).LastOrDefault();
             if (lastModifierChange == null)
                 return;
-            var currentModifiers = (lastModifierChange as ModifierChangeAction).newModifiers;
+            var currentModifiers = (lastModifierChange as ModifierChangeAction)!.NewModifiers;
 
             forceDisabled = true;
 
@@ -303,7 +297,7 @@ namespace WMG.Core
             if (initialModifiers.Lmb && !currentModifiers.Lmb)
             {
                 bool succ = WinAPI.GetCursorPos(out Point currentMousePos); // it's probably not too important where we release the mouse, but let's try to use the current mouse position
-                WinAPI.mouse_event(MouseEventFlags.ABSOLUTE | MouseEventFlags.LEFTUP, succ ? currentMousePos.x : 0, succ ? currentMousePos.y : 0, 0, UIntPtr.Zero);
+                WinAPI.mouse_event(MouseEventFlags.ABSOLUTE | MouseEventFlags.LEFTUP, succ ? currentMousePos.X : 0, succ ? currentMousePos.Y : 0, 0, UIntPtr.Zero);
             }
 
             forceDisabled = false;
@@ -315,8 +309,8 @@ namespace WMG.Core
         private void ClickThrough(Point position)
         {
             forceDisabled = true;
-            WinAPI.mouse_event(MouseEventFlags.ABSOLUTE | MouseEventFlags.RIGHTDOWN, position.x, position.y, 0, UIntPtr.Zero);
-            WinAPI.mouse_event(MouseEventFlags.ABSOLUTE | MouseEventFlags.RIGHTUP, position.x, position.y, 0, UIntPtr.Zero);
+            WinAPI.mouse_event(MouseEventFlags.ABSOLUTE | MouseEventFlags.RIGHTDOWN, position.X, position.Y, 0, UIntPtr.Zero);
+            WinAPI.mouse_event(MouseEventFlags.ABSOLUTE | MouseEventFlags.RIGHTUP, position.X, position.Y, 0, UIntPtr.Zero);
             forceDisabled = false;
         }
 

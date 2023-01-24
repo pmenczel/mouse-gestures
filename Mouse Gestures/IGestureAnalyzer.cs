@@ -3,7 +3,7 @@ using WMG.Core;
 
 namespace WMG.Gestures
 {
-    public delegate void UnfinishedGestureHandler(UnfinishedGesture currentGesture);
+    public delegate void UnfinishedGestureHandler(UnfinishedGesture? currentGesture);
     public delegate void GestureHandler(Gesture gesture);
     public delegate void ClickThroughHandler(Point mousePosition);
 
@@ -22,7 +22,7 @@ namespace WMG.Gestures
          * Notify the analyzer that the right mouse button was released.
          * If this event signifies the completion of a gesture, the cleanup callback should be called in a separate thread and before OnGestureComplete is triggered.
          */
-        bool RmbUp(Point position, Action<Gesture> cleanup);
+        bool RmbUp(Point position, Action<Gesture>? cleanup);
 
         /*
          * Notify the analyzer that the mouse was moved.
@@ -52,13 +52,13 @@ namespace WMG.Gestures
         /*
          * The gesture currently being recorded (or null if there is none).
          */
-        UnfinishedGesture CurrentGesture { get; }
+        UnfinishedGesture? CurrentGesture { get; }
 
         void Reset();
 
-        event ClickThroughHandler OnClickThrough;
-        event GestureHandler OnGestureComplete;
-        event UnfinishedGestureHandler OnGestureStart;
-        event UnfinishedGestureHandler OnGestureUpdate;
+        event ClickThroughHandler? OnClickThrough;
+        event GestureHandler? OnGestureComplete;
+        event UnfinishedGestureHandler? OnGestureStart;
+        event UnfinishedGestureHandler? OnGestureUpdate;
     }
 }

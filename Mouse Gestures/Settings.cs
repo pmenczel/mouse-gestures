@@ -8,7 +8,7 @@
         private Settings() { }
 
         public delegate void SettingsUpdateHandler();
-        public static event SettingsUpdateHandler OnChange;
+        public static event SettingsUpdateHandler? OnChange;
 
         public static bool Disabled { get => false; }
 

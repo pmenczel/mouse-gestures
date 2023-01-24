@@ -18,10 +18,10 @@ namespace WMG.Gestures
     {
         public Modifiers InitialModifiers { get; }
 
-        private readonly List<AnnotatedAction> completedActions = new List<AnnotatedAction>();
+        private readonly List<AnnotatedAction> completedActions = new();
         public IEnumerable<AnnotatedAction> CompletedActions => new List<AnnotatedAction>(completedActions);
 
-        private readonly List<Point> movementData = new List<Point>();
+        private readonly List<Point> movementData = new();
         public IEnumerable<Point> MovementData => new List<Point>(movementData);
 
         public UnfinishedGesture(Modifiers initialModifiers, Point initialMousePosition)
@@ -33,36 +33,42 @@ namespace WMG.Gestures
         /*
          * Find the current modifiers, according to the latest ModifierChangeAction in the gesture.
          */
-        public Modifiers CurrentModifiers()
+        public Modifiers CurrentModifiers
         {
-            var lastChangeAction = completedActions.FindLast(a => a.Action is ModifierChangeAction);
-            if (lastChangeAction == null)
-                return InitialModifiers;
-            else
-                return (lastChangeAction.Action as ModifierChangeAction).newModifiers;
+            get
+            {
+                var lastChangeAction = completedActions.FindLast(a => a.Action is ModifierChangeAction);
+                if (lastChangeAction == null)
+                    return InitialModifiers;
+                else
+                    return (lastChangeAction.Action as ModifierChangeAction)!.NewModifiers;
+            }
         }
 
         /*
          * Find the current mouse position, according to the recorded mouse movement data
          */
-        public Point CurrentMousePosition() => movementData.Last();
+        public Point CurrentMousePosition => movementData.Last();
 
         /*
          * Find the mouse position at which the gesture was started
          */
-        public Point InitialMousePosition()
+        public Point InitialMousePosition
         {
-            AnnotatedAction firstAction = completedActions.FirstOrDefault();
-            if (firstAction == null)
-                return movementData.First();
-            else
-                return firstAction.Position;
+            get
+            {
+                AnnotatedAction? firstAction = completedActions.FirstOrDefault();
+                if (firstAction == null)
+                    return movementData.First();
+                else
+                    return firstAction.Position;
+            }
         }
 
         /*
          * Find the latest completed action in this gesture (or null, if there is none).
          */
-        public AnnotatedAction LatestAction() => completedActions.LastOrDefault();
+        public AnnotatedAction? LatestAction => completedActions.LastOrDefault();
 
         /*
          * Add a new action to this unfinished gesture (mutating the object).
@@ -78,7 +84,7 @@ namespace WMG.Gestures
          */
         internal void RecordAction(WMGAction action)
         {
-            RecordAction(action, CurrentMousePosition());
+            RecordAction(action, CurrentMousePosition);
         }
 
         /*
@@ -103,7 +109,7 @@ namespace WMG.Gestures
          */
         internal void ClearMovementData()
         {
-            ClearMovementData(CurrentMousePosition());
+            ClearMovementData(CurrentMousePosition);
         }
 
         public Gesture Complete(Point mousePosition)

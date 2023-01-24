@@ -24,10 +24,10 @@ namespace WMG.Reactions
                 case ReactionTarget.ACTIVE_WINDOW:
                     return WinAPI.GetForegroundWindow();
                 case ReactionTarget.WINDOW_AT_GESTURE_START:
-                    position = gesture.RawData?.InitialMousePosition();
+                    position = gesture.RawData?.InitialMousePosition;
                     break;
                 case ReactionTarget.WINDOW_AT_POINTER:
-                    position = gesture.RawData?.CurrentMousePosition();
+                    position = gesture.RawData?.CurrentMousePosition;
                     break;
             }
 
@@ -73,9 +73,9 @@ namespace WMG.Reactions
 
         private static readonly string IDENTIFIER = "CloseWindow";
 
-        public static readonly CloseWindowType INSTANCE = new CloseWindowType();
+        public static readonly CloseWindowType INSTANCE = new();
 
-        public override string StoreString(Reaction r, ISerializationContext context)
+        public override string? StoreString(Reaction r, ISerializationContext context)
         {
             if (r is CloseWindowReaction c)
             {
@@ -84,11 +84,11 @@ namespace WMG.Reactions
             return null;
         }
 
-        public override Reaction LoadString(string str, ISerializationContext context)
+        public override Reaction? LoadString(string str, ISerializationContext context)
         {
             if (str.StartsWith(IDENTIFIER))
             {
-                string targetString = str.Substring(IDENTIFIER.Length);
+                string targetString = str[IDENTIFIER.Length..];
                 if (Enum.TryParse<ReactionTarget>(targetString, out ReactionTarget target))
                 {
                     return new CloseWindowReaction(target);
@@ -152,9 +152,9 @@ namespace WMG.Reactions
 
         private static readonly string IDENTIFIER = "MinimizeWindow";
 
-        public static readonly MinimizeWindowType INSTANCE = new MinimizeWindowType();
+        public static readonly MinimizeWindowType INSTANCE = new();
 
-        public override string StoreString(Reaction r, ISerializationContext context)
+        public override string? StoreString(Reaction r, ISerializationContext context)
         {
             if (r is MinimizeWindowReaction m)
             {
@@ -163,11 +163,11 @@ namespace WMG.Reactions
             return null;
         }
 
-        public override Reaction LoadString(string str, ISerializationContext context)
+        public override Reaction? LoadString(string str, ISerializationContext context)
         {
             if (str.StartsWith(IDENTIFIER))
             {
-                string remainder = str.Substring(IDENTIFIER.Length);
+                string remainder = str[IDENTIFIER.Length..];
                 string[] parts = remainder.Split(';');
 
                 if (parts.Length == 2 &&
@@ -211,9 +211,9 @@ namespace WMG.Reactions
 
         private static readonly string IDENTIFIER = "MaximizeWindow";
 
-        public static readonly MaximizeWindowType INSTANCE = new MaximizeWindowType();
+        public static readonly MaximizeWindowType INSTANCE = new();
 
-        public override string StoreString(Reaction r, ISerializationContext context)
+        public override string? StoreString(Reaction r, ISerializationContext context)
         {
             if (r is MaximizeWindowReaction m)
             {
@@ -222,11 +222,11 @@ namespace WMG.Reactions
             return null;
         }
 
-        public override Reaction LoadString(string str, ISerializationContext context)
+        public override Reaction? LoadString(string str, ISerializationContext context)
         {
             if (str.StartsWith(IDENTIFIER))
             {
-                string targetString = str.Substring(IDENTIFIER.Length);
+                string targetString = str[IDENTIFIER.Length..];
                 if (Enum.TryParse<ReactionTarget>(targetString, out ReactionTarget target))
                 {
                     return new MaximizeWindowReaction(target);
@@ -266,9 +266,9 @@ namespace WMG.Reactions
 
         private static readonly string IDENTIFIER = "MoveWindow";
 
-        public static readonly MoveWindowType INSTANCE = new MoveWindowType();
+        public static readonly MoveWindowType INSTANCE = new();
 
-        public override string StoreString(Reaction r, ISerializationContext context)
+        public override string? StoreString(Reaction r, ISerializationContext context)
         {
             if (r is MoveWindowReaction m)
             {
@@ -279,11 +279,11 @@ namespace WMG.Reactions
             return null;
         }
 
-        public override Reaction LoadString(string str, ISerializationContext context)
+        public override Reaction? LoadString(string str, ISerializationContext context)
         {
             if (str.StartsWith(IDENTIFIER))
             {
-                string remainder = str.Substring(IDENTIFIER.Length);
+                string remainder = str[IDENTIFIER.Length..];
                 string[] parts = remainder.Split(';');
 
                 if (parts.Length == 5 &&
