@@ -384,22 +384,7 @@ namespace WMG.Core
         internal delegate bool MonitorEnumProc(IntPtr hMonitor, IntPtr hdcMonitor, ref Rect lprcMonitor, IntPtr dwData);
 
         // Somewhat more high-level version of the MONITORINFO struct
-        internal readonly struct MonitorInformation
-        {
-            // Area filled by a fullscreen window on this monitor
-            internal readonly Rect MonitorArea;
-            // Area filled by a maximized window on this monitor
-            internal readonly Rect WorkArea;
-            // Whether this is the primary monitor
-            internal readonly bool Primary;
-
-            internal MonitorInformation(Rect monitorArea, Rect workArea, bool primary)
-            {
-                this.MonitorArea = monitorArea;
-                this.WorkArea = workArea;
-                this.Primary = primary;
-            }
-        }
+        internal readonly record struct MonitorInformation(Rect MonitorArea, Rect WorkArea, bool Primary);
 
         /*
          * Helper method for common task: retrieve information about all available monitors.

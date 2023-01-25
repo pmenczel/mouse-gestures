@@ -7,7 +7,7 @@ namespace WMG.Core
      // http://pinvoke.net/default.aspx/Structures.POINT
      // https://docs.microsoft.com/en-us/windows/desktop/api/windef/ns-windef-point
     [StructLayout(LayoutKind.Sequential)]
-    public record struct Point(int X, int Y)
+    public readonly record struct Point(int X, int Y)
     {
         public double SquareDistance(Point other) =>
             (X - other.X) * (X - other.X) + (Y - other.Y) * (Y - other.Y);
@@ -18,7 +18,7 @@ namespace WMG.Core
     // Compatible with the winapi RECT struct
     // https://pinvoke.net/default.aspx/Structures/RECT.html
     [StructLayout(LayoutKind.Sequential)]
-    public record struct Rect(int Left, int Top, int Right, int Bottom)
+    public readonly record struct Rect(int Left, int Top, int Right, int Bottom)
     {
         public int Width => Right - Left;
         public int Height => Bottom - Top;
